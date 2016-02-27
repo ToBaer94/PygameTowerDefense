@@ -1,0 +1,8 @@
+#Python
+*.py[cod]
+
+#Pycharm
+.idea/
+
+#Gimp files
+*.xcf
