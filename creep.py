@@ -13,8 +13,10 @@ BLACK = pg.Color("black")
 
 
 class Creep(pg.sprite.Sprite):
-    health = 10
-    speed = 0.3
+    total_health = 100
+    health = 100
+    speed = 2.0
+    orig_speed  = 2.0
 
     def __init__(self, level, pathing):
         super(Creep, self).__init__()
@@ -38,6 +40,8 @@ class Creep(pg.sprite.Sprite):
         self.start_index = 1
         self.moved_pixels = 0
         self.color = GREEN
+        self.slow_timer = 0
+        self.slow_duration = 1000
 
 
     def set_movement(self):
@@ -54,6 +58,7 @@ class Creep(pg.sprite.Sprite):
 
     def update(self, dt):
         self.set_ui()
+        print self.speed
 
         if self.health <= 0:
             self.dead = True
@@ -62,6 +67,12 @@ class Creep(pg.sprite.Sprite):
 
         if self.rect.collidepoint(self.end):
             self.level.game_over = True
+
+        now = pg.time.get_ticks()
+        if now - self.slow_timer > self.slow_duration:
+            self.slow_timer = 0
+            self.speed = self.orig_speed
+            self.slowed = False
 
         velocity = self.set_movement()
         velocity.x *= self.speed
@@ -87,8 +98,15 @@ class Creep(pg.sprite.Sprite):
 
     def draw_ui(self, screen):
         pg.draw.rect(screen, BLACK, [self.rect.x + 0.3 * self.rect.width - 3,
-                                                 self.rect.y - 5, self.rect.width // 2 + 6, 5])
+                                     self.rect.y - 5, self.rect.width // 2 + 6, 5])
         pg.draw.rect(screen, self.color, [self.rect.x + 0.3 * self.rect.width - 2, self.rect.y - 4,
-                                          (float(self.health) / 10 * self.rect.width // 2) + 4, 3])
+                                          (float(self.health) / self.total_health * self.rect.width // 2) + 4, 3])
+
+    def set_slowed(self, modifier, duration):
+        if not self.slowed:
+            self.slowed = True
+            self.slow_duration = duration
+            self.speed *= modifier
+        self.slow_timer = pg.time.get_ticks()
 
 

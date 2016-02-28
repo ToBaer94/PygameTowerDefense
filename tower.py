@@ -1,6 +1,6 @@
 import pygame as pg
 from os import path, pardir
-from bullet import Bullet, ExplosiveBullet, Beam
+from bullet import Bullet, ExplosiveBullet, Beam, SlowBullet
 import copy
 Vector = pg.math.Vector2
 
@@ -8,13 +8,14 @@ tower_dir = path.join(path.dirname(__file__), "assets", "towers")
 
 
 class Tower(pg.sprite.Sprite):
+    name = "Sniper Tower"
     radius = 100
     damage = 1
     tier = 1
     cost = 100
     upgrade_cost = 70
     bullet_cd = 1000
-    speed = 2
+    bullet_speed = 2
     max_tier = 5
     def __init__(self, x, y, level):
         super(Tower, self).__init__()
@@ -44,7 +45,7 @@ class Tower(pg.sprite.Sprite):
             self.shoot_bullet(target)
 
     def shoot_bullet(self, target):
-        bullet = Bullet(self.rect.x, self.rect.y, self.level, self.damage, self.speed, target)
+        bullet = Bullet(self.rect.x, self.rect.y, self.level, self.damage, self.bullet_speed, target)
         self.level.bullet_group.add(bullet)
 
     def draw2(self, screen):
@@ -71,17 +72,36 @@ class Tower(pg.sprite.Sprite):
         return False
 
 
+class SlowTower(Tower):
+    name = "Slow Tower"
+    radius = 100
+    damage = 0
+    tier = 1
+    cost = 200
+    bullet_cd = 1000
+    upgrade_cost = 50
+    bullet_speed = 1
+    speed_mod = 0.8
+    slow_duration = 3000
+    def __init__(self, x, y, level):
+        super(SlowTower, self).__init__(x, y, level)
+        self.image = pg.image.load(path.join(tower_dir, "tower5.png")).convert_alpha()
+        self.rect = self.image.get_rect(topleft=(x, y))
 
+    def shoot_bullet(self, target):
+        bullet = SlowBullet(self.rect.x, self.rect.y, self.level, self.damage, self.bullet_speed, target, self.speed_mod, self.slow_duration)
+        self.level.bullet_group.add(bullet)
 
 
 class Tower2(Tower):
+    name = "Cannon Tower"
     radius = 75
     damage = 2
     tier = 1
     cost = 200
     bullet_cd = 2500
     upgrade_cost = 70
-    speed = 1
+    bullet_speed = 1
 
     def __init__(self, x, y, level):
         super(Tower2, self).__init__(x, y, level)
@@ -90,6 +110,7 @@ class Tower2(Tower):
 
 
 class ExplosiveTower(Tower):
+    name = "Explosive Tower"
     radius = 75
     damage = 0.5
     tier = 1
@@ -109,13 +130,14 @@ class ExplosiveTower(Tower):
 
 
 class FireTower(Tower):
+    name = "Fire Tower"
     radius = 100
     damage = 0.5
     tier = 1
     cost = 200
     bullet_cd = 1500
     upgrade_cost = 100
-    speed = 1
+    bullet_speed = 1
     attack_radius = [5, 10, 15, 20, 25]
     tick_frequency = 1200
 
@@ -180,7 +202,7 @@ class FireTower(Tower):
             self.fired_beam.kill()
 
         beam = Beam(self.rect.x + 0.5 * self.rect.width, self.rect.y + 0.5 * self.rect.height, self.level,
-                    self.damage, self.speed, target, pos_list, vector, self.attack_radius, self.tick_frequency)
+                    self.damage, self.bullet_speed, target, pos_list, vector, self.attack_radius, self.tick_frequency)
         self.fired_beam = beam
         self.level.beam_group.add(beam)
 

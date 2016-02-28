@@ -1,6 +1,6 @@
 import pygame as pg
 import tilerenderer
-from tower import Tower, Tower2, ExplosiveTower, FireTower
+from tower import Tower, Tower2, ExplosiveTower, FireTower, SlowTower
 from creep import Creep
 from os import path, pardir
 
@@ -21,7 +21,7 @@ class Level(object):
         self.bullet_group = pg.sprite.Group()
         self.beam_group = pg.sprite.Group()
 
-        self.tower_list = [Tower, Tower2, ExplosiveTower, FireTower]
+        self.tower_list = [Tower, Tower2, ExplosiveTower, FireTower, SlowTower]
         self.start_pos = None
         self.end_pos = None
         for x in range(self.tile_renderer.tmx_data.width):
@@ -33,7 +33,7 @@ class Level(object):
                     self.end_pos = (x, y)
 
         self.spawner = Spawner(self)
-        self.waves = [3, 5, 10]
+        self.waves = [1, 5, 10]
         self.wave_number = 0
         self.wave_length = self.waves[self.wave_number]
         self.last_spawn = pg.time.get_ticks()
@@ -44,7 +44,7 @@ class Level(object):
         self.game_over = False
 
     def update(self, dt):
-        print self.wave_length
+        #print self.wave_length
         if self.wave_length > 0:
             now = pg.time.get_ticks()
             if now - self.last_spawn > 2000:

@@ -45,6 +45,33 @@ class Bullet(pg.sprite.Sprite):
         self.rect.y = self.pos.y
 
 
+class SlowBullet(Bullet):
+    def __init__(self, x, y, level, damage, speed, target, speed_modifier, duration):
+        super(SlowBullet, self).__init__(x, y, level, damage, speed, target)
+
+        self.image = pg.image.load(path.join(bullet_dir, "slow_bullet.png")).convert_alpha()
+        self.rect = self.image.get_rect(topleft = (x, y))
+
+        self.speed_modifier = speed_modifier
+        self.slow_duration = duration
+
+    def update(self, dt):
+
+        if self.target.rect.collidepoint(self.rect.center):
+            self.target.health -= self.damage
+            self.target.set_slowed(self.speed_modifier, self.slow_duration)
+            self.kill()
+
+        if self.target.dead:
+            self.kill()
+
+        self.set_target()
+        new_vec = self.vel.normalize()
+        self.pos.x += new_vec.x * self.speed * dt
+        self.pos.y += new_vec.y * self.speed * dt
+        self.rect.x = self.pos.x
+        self.rect.y = self.pos.y
+
 
 class ExplosiveBullet(Bullet):
     def __init__(self, x, y, level, damage, speed, target):

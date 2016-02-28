@@ -30,11 +30,14 @@ class GamePlay(GameState):
         self.tower_ui_2 = pg.image.load(path.join(ui_dir, "tower_2_button.png")).convert_alpha()
         self.tower_ui_2_rect = self.tower_ui_2.get_rect(topleft = (0+110, 512+19))
 
-        self.tower_ui_3 = pg.image.load(path.join(ui_dir, "tower_2_button.png")).convert_alpha()
+        self.tower_ui_3 = pg.image.load(path.join(ui_dir, "tower_3_button.png")).convert_alpha()
         self.tower_ui_3_rect = self.tower_ui_3.get_rect(topleft=(0+193, 512+19))
 
-        self.tower_ui_4 = pg.image.load(path.join(ui_dir, "tower_2_button.png")).convert_alpha()
-        self.tower_ui_4_rect = self.tower_ui_3.get_rect(topleft=(0+280, 512+19))
+        self.tower_ui_4 = pg.image.load(path.join(ui_dir, "tower_4_button.png")).convert_alpha()
+        self.tower_ui_4_rect = self.tower_ui_4.get_rect(topleft=(0+280, 512+19))
+
+        self.tower_ui_5 = pg.image.load(path.join(ui_dir, "tower_5_button.png")).convert_alpha()
+        self.tower_ui_5_rect = self.tower_ui_5.get_rect(topleft=(0+363, 512+19))
 
         self.button_1 = pg.image.load(path.join(ui_dir, "upgrade_button.png")).convert_alpha()
         self.button_1_rect = self.button_1.get_rect()
@@ -56,7 +59,12 @@ class GamePlay(GameState):
     def startup(self, persistent):
         self.level = Level()
 
+        self.selected = None
+        self.selected_tower = None
+
+
         self.tile_list = []
+
         start = 0
         end = 0
         for x in range(self.level.tile_renderer.tmx_data.width):
@@ -162,6 +170,7 @@ class GamePlay(GameState):
 
     def create_tower_info(self):
         self.tower_info = []
+        name = self.selected_tower.name
         attack = self.selected_tower.damage
         range = self.selected_tower.radius
         up_cost = self.selected_tower.upgrade_cost
@@ -169,6 +178,7 @@ class GamePlay(GameState):
             tick_frequency = self.selected_tower.tick_frequency
 
         if self.selected_tower.tier <= self.selected_tower.max_tier:
+            self.tower_info.append(self.create_text(str(name)))
             self.tower_info.append(self.create_text("Damage: " + str(attack)))
             if type(self.selected_tower).__name__ == "FireTower":
                 self.tower_info.append(self.create_text("Damage every " + str(tick_frequency) + "ms"))
@@ -176,6 +186,7 @@ class GamePlay(GameState):
                 self.tower_info.append(self.create_text("Range: " + str(range)))
             self.tower_info.append(self.create_text("Cost to Upgrade: " + str(up_cost)))
         else:
+            self.tower_info.append(self.create_text(str(name)))
             self.tower_info.append(self.create_text("Damage: " + str(attack)))
             if type(self.selected_tower).__name__ == "FireTower":
                 self.tower_info.append(self.create_text("Damage every " + str(tick_frequency) + "ms"))
@@ -213,10 +224,10 @@ class GamePlay(GameState):
         screen.blit(self.tower_ui_1, (0+21, 512+19))
         screen.blit(self.tower_ui_2, (0+110, 512+19))
         screen.blit(self.tower_ui_3, (0+193, 512+19))
-        screen.blit(self.tower_ui_4, (0+280, 512+19))
+        screen.blit(self.tower_ui_4, (0+277, 512+19))
+        screen.blit(self.tower_ui_5, (0+363, 512+19))
 
-        if self.money_ui is not None:
-            screen.blit(self.money_ui, (600, 512 + 40))
+
 
 
         if self.selected_tower is not None:
@@ -240,9 +251,20 @@ class GamePlay(GameState):
 
             self.create_tower_info()
 
-            for index, text in enumerate(self.tower_info):
-                rect = text.get_rect()
-                screen.blit(text, (363, 512 + 20 + index * (rect.height + 2)))
+            if self.selected_tower.rect.x < 400:
+                pg.draw.rect(screen, pg.Color(255, 233, 114), [800-192, 450 - 2, 192, 200])
+                for index, text in enumerate(self.tower_info):
+                    rect = text.get_rect()
+                    screen.blit(text, (800-192 + 10, 450 + 20 + index * (rect.height + 2)))
+
+            elif self.selected_tower.rect.x >= 400:
+                pg.draw.rect(screen, pg.Color(255, 233, 114), [0, 312 - 2, 192, 200])
+                for index, text in enumerate(self.tower_info):
+                    rect = text.get_rect()
+                    screen.blit(text, (0 + 10, 312 + 20 + index * (rect.height + 2)))
+
+        if self.money_ui is not None:
+            screen.blit(self.money_ui, (800-192 + 10, 512 + 40))
         #for location in self.pathing:
          #   pg.draw.rect(screen, pg.Color("black"), [location[0] * 32, location[1] * 32, 32, 32], 1)
     def draw(self, screen):
@@ -264,6 +286,9 @@ class GamePlay(GameState):
 
             elif self.tower_ui_4_rect.collidepoint(x, y):
                 self.selected = 3
+
+            elif self.tower_ui_5_rect.collidepoint(x, y):
+                self.selected = 4
 
         if self.selected is None:
             for tower in self.level.tower_group:
