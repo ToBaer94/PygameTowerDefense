@@ -6,6 +6,12 @@ Vector = pg.math.Vector2
 
 creep_dir = path.join(path.dirname(__file__), "assets", "creeps")
 
+RED = pg.Color("red")
+YELLOW = pg.Color("yellow")
+GREEN = pg.Color("green")
+BLACK = pg.Color("black")
+
+
 class Creep(pg.sprite.Sprite):
     health = 10
     speed = 0.3
@@ -31,6 +37,7 @@ class Creep(pg.sprite.Sprite):
         self.pathing = pathing
         self.start_index = 1
         self.moved_pixels = 0
+        self.color = GREEN
 
 
     def set_movement(self):
@@ -46,6 +53,8 @@ class Creep(pg.sprite.Sprite):
 
 
     def update(self, dt):
+        self.set_ui()
+
         if self.health <= 0:
             self.dead = True
             self.level.money += 20
@@ -65,6 +74,21 @@ class Creep(pg.sprite.Sprite):
             self.pos.y = self.level.tile_renderer.tmx_data.tileheight * ((self.pos.y + self.speed + 1) // self.level.tile_renderer.tmx_data.tileheight)
         self.rect.topleft = self.pos
 
-    def draw2(self, screen):
-        pg.draw.circle(screen, pg.Color("black"), self.rect.center, self.radius, 1)
+    def draw_debug(self, screen):
+        pg.draw.circle(screen, BLACK, self.rect.center, self.radius, 1)
+
+    def set_ui(self):
+        if self.health >= 7:
+            self.color = GREEN
+        elif self.health >= 4:
+            self.color = YELLOW
+        else:
+            self.color = RED
+
+    def draw_ui(self, screen):
+        pg.draw.rect(screen, BLACK, [self.rect.x + 0.3 * self.rect.width - 3,
+                                                 self.rect.y - 5, self.rect.width // 2 + 6, 5])
+        pg.draw.rect(screen, self.color, [self.rect.x + 0.3 * self.rect.width - 2, self.rect.y - 4,
+                                          (float(self.health) / 10 * self.rect.width // 2) + 4, 3])
+
 

@@ -1,6 +1,7 @@
 # Pygame TowerDefense
 
-My second game developed to learn and improve my programming skills
+My second game developed to learn and improve my programming skills.
+
 Requires python 2.7 and pygame 1.9.2a0 win32 bit: http://www.pygame.org/download.shtml
 
 Uses pytmx version 3.20 to allow loading of .tmx map files. pytmx is licensed under LGPL v3:  https://github.com/bitcraft/PyTMX

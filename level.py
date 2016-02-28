@@ -57,13 +57,13 @@ class Level(object):
         self.bullet_group.update(dt)
         self.beam_group.update(dt)
 
-        for creep in self.creep_group:
-            print creep
-
         if self.wave_length == 0 and self.creep_group.__len__() == 0:
             print "end of wave"
-            self.wave_number += 1
-            self.wave_length = self.waves[self.wave_number]
+            if self.wave_number < len(self.waves) - 1:
+                self.wave_number += 1
+                self.wave_length = self.waves[self.wave_number]
+            else:
+                print "games over"
 
     def draw(self, screen):
         screen.blit(self.map_surface, (0, 0))
@@ -73,15 +73,19 @@ class Level(object):
         self.beam_group.draw(screen)
 
         for creep in self.creep_group:
-            creep.draw2(screen)
+            creep.draw_ui(screen)
+            # creep.draw_debug(screen)
 
+        #self.debug_beam(screen)
+
+
+
+    def debug_beam(self, screen):
         for cir in self.beam_group:
             for cle in cir.circle_list:
                 pos_x = int(cle[0].x)
                 pos_y = int(cle[0].y)
                 pg.draw.circle(screen, pg.Color("black"), (pos_x, pos_y), cle[1], 1)
-
-
 
 
 class Spawner(object):
