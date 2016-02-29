@@ -1,5 +1,7 @@
 import pygame as pg
-from states.gameplay import GamePlay
+from states.gameplay_state import GamePlay
+from states.menu_state import MenuState
+from states.rules_state import RuleState
 import sys, os
 
 
@@ -70,9 +72,11 @@ if __name__ == "__main__":
 
     pg.display.set_caption("TD 1")
     screen = pg.display.set_mode((800, 600)) # , pg.RESIZABLE
-    states = {"LEVEL": GamePlay()}
+    states = {"LEVEL": GamePlay(),
+              "MENU": MenuState(),
+              "RULES": RuleState()}
 
-    game = Game(screen, states, "LEVEL")
+    game = Game(screen, states, "MENU")
     game.run()
     pg.quit()
     sys.exit()

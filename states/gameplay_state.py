@@ -10,18 +10,10 @@ ui_dir = path.join(path.dirname(__file__), pardir, "assets", "ui")
 tower_dir = path.join(path.dirname(__file__), pardir, "assets", "towers")
 
 
-class Button(object):
-    def __init__(self):
-        super(Button, self).__init__()
-        self.image = "tower_1_button.png"
-        
-# path.join(ui_dir,
-
-
 class GamePlay(GameState):
     def __init__(self):
         super(GamePlay, self).__init__()
-        self.next_state = "LEVEL"   
+        self.next_state = "MENU"
 
         self.ui = pg.image.load(path.join(ui_dir, "uitemplate.png")).convert_alpha()
         self.tower_ui_1 = pg.image.load(path.join(ui_dir, "tower_1_button.png")).convert_alpha()
@@ -39,13 +31,16 @@ class GamePlay(GameState):
         self.tower_ui_5 = pg.image.load(path.join(ui_dir, "tower_5_button.png")).convert_alpha()
         self.tower_ui_5_rect = self.tower_ui_5.get_rect(topleft=(0+363, 512+19))
 
-        self.button_1 = pg.image.load(path.join(ui_dir, "upgrade_button.png")).convert_alpha()
+        self.button_1 = pg.image.load(path.join(ui_dir, "upgrade_button.png")).convert_alpha() # Up damage
         self.button_1_rect = self.button_1.get_rect()
 
-        self.button_2 = pg.image.load(path.join(ui_dir, "upgrade_button_2.png")).convert_alpha()
+        self.button_2 = pg.image.load(path.join(ui_dir, "upgrade_button_2.png")).convert_alpha() # Up range
         self.button_2_rect = self.button_2.get_rect()
 
-        self.button_3 = pg.image.load(path.join(ui_dir, "upgrade_button_3.png")).convert_alpha()
+        self.button_3 = pg.image.load(path.join(ui_dir, "upgrade_button_3.png")).convert_alpha() # Up firetower DPS
+
+        self.button_4 = pg.image.load(path.join(ui_dir, "sell_button.png")).convert_alpha() # Sell Tower
+        self.button_4_rect = self.button_4.get_rect()
 
 
 
@@ -55,6 +50,8 @@ class GamePlay(GameState):
         self.tower_info = []
         self.money_ui = None
         self.level = None
+
+        self.props = {}
 
     def startup(self, persistent):
         self.level = Level()
@@ -107,10 +104,6 @@ class GamePlay(GameState):
         self.pathing = final_path
         self.level.creep_path = self.pathing
 
-
-
-
-
     def get_neighbors(self, node):
         dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]]
         result = []
@@ -119,12 +112,6 @@ class GamePlay(GameState):
             if neighbor in self.tile_list:
                 result.append(neighbor)
         return result
-
-
-
-
-
-            #self.level.tile_renderer.tmx_data.get_tile_properties(x, y, 1)
 
     def get_event(self, event):
         if event.type == pg.QUIT:
@@ -142,6 +129,7 @@ class GamePlay(GameState):
 
             # pytmx library throws "Exception" when trying to access a non existent tile
             except Exception:
+                # print "Tile at location " + "(" + str(x) + " / " + str(y) + ") doesnt exist"
                 self.props = {}
 
         if event.type == pg.MOUSEBUTTONDOWN:
@@ -166,7 +154,7 @@ class GamePlay(GameState):
         self.level.update(dt)
 
     def update_money(self):
-        self.money_ui = self.create_text(str(self.level.money) + " shekels")
+        self.money_ui = self.create_text(str(self.level.money) + " Gold")
 
     def create_tower_info(self):
         self.tower_info = []
@@ -218,6 +206,8 @@ class GamePlay(GameState):
                                                                   self.cursor_y * self.level.tile_renderer.tmx_data.tileheight))
         except KeyError:
             pass
+            # print "Key 'can_build' not in dictionary 'self.props'"
+            # print "Mouse cursor must be outside of the map area (e.g. on top of the UI)"
 
     def draw_ui(self, screen):
         screen.blit(self.ui, (0, 512))
@@ -238,16 +228,19 @@ class GamePlay(GameState):
             self.selected_tower.draw2(screen)
 
             if self.selected_tower.tier <= self.selected_tower.max_tier:
-                screen.blit(self.button_1, (self.selected_tower.rect.x - self.button_1_rect.width, self.selected_tower.rect.y - self.button_1_rect.height))
-                self.button_1_rect.x, self.button_1_rect.y = (self.selected_tower.rect.x - self.button_1_rect.width, self.selected_tower.rect.y - self.button_1_rect.height)
+                screen.blit(self.button_1, (self.selected_tower.rect.x - self.button_1_rect.width - 1, self.selected_tower.rect.y - self.button_1_rect.height))
+                self.button_1_rect.x, self.button_1_rect.y = (self.selected_tower.rect.x - self.button_1_rect.width - 1, self.selected_tower.rect.y - self.button_1_rect.height)
 
                 if type(self.selected_tower).__name__ == "FireTower":
-                    screen.blit(self.button_3, (self.selected_tower.rect.x + self.selected_tower.rect.width, self.selected_tower.rect.y- self.button_2_rect.height))
-                    self.button_2_rect.x, self.button_2_rect.y = (self.selected_tower.rect.x + self.selected_tower.rect.width, self.selected_tower.rect.y- self.button_2_rect.height)
+                    screen.blit(self.button_3, (self.selected_tower.rect.x + self.selected_tower.rect.width + 1, self.selected_tower.rect.y- self.button_2_rect.height))
+                    self.button_2_rect.x, self.button_2_rect.y = (self.selected_tower.rect.x + self.selected_tower.rect.width + 1, self.selected_tower.rect.y- self.button_2_rect.height)
 
                 else:
-                    screen.blit(self.button_2, (self.selected_tower.rect.x + self.selected_tower.rect.width, self.selected_tower.rect.y- self.button_2_rect.height))
-                    self.button_2_rect.x, self.button_2_rect.y = (self.selected_tower.rect.x + self.selected_tower.rect.width, self.selected_tower.rect.y- self.button_2_rect.height)
+                    screen.blit(self.button_2, (self.selected_tower.rect.x + self.selected_tower.rect.width + 1, self.selected_tower.rect.y- self.button_2_rect.height))
+                    self.button_2_rect.x, self.button_2_rect.y = (self.selected_tower.rect.x + self.selected_tower.rect.width + 1, self.selected_tower.rect.y- self.button_2_rect.height)
+
+                screen.blit(self.button_4, (self.selected_tower.rect.x + 1, self.selected_tower.rect.y - self.button_4_rect.height))
+                self.button_4_rect.x, self.button_4_rect.y = (self.selected_tower.rect.x + 1, self.selected_tower.rect.y - self.button_4_rect.height)
 
             self.create_tower_info()
 
@@ -308,6 +301,14 @@ class GamePlay(GameState):
                     else:
                         self.selected_tower.upgrade_radius()
 
+            if self.button_4_rect.collidepoint(x, y):
+                self.sell_tower()
+
+    def sell_tower(self):
+        self.level.money += self.selected_tower.cost * 0.8
+        self.level.money = int(self.level.money)
+        self.selected_tower.kill()
+        self.selected_tower = None
 
     def place_tower(self, x, y):
         try:
@@ -326,7 +327,8 @@ class GamePlay(GameState):
 
         #Catch the keyerror in case the self.props dict wasnt updated yet
         except KeyError:
-            print "yey"
+            print "Key 'can_build' not in dictionary 'self.props'"
+            print "Mouse cursor must be outside of the map area (e.g. on top of the UI)"
 
     def create_tower(self, x, y, selected):
         x = x // self.level.tile_renderer.tmx_data.tilewidth

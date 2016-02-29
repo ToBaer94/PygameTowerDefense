@@ -15,8 +15,8 @@ BLACK = pg.Color("black")
 class Creep(pg.sprite.Sprite):
     total_health = 100
     health = 100
-    speed = 2.0
-    orig_speed  = 2.0
+    speed = 0.3
+    orig_speed = 0.3
 
     def __init__(self, level, pathing):
         super(Creep, self).__init__()
@@ -58,7 +58,6 @@ class Creep(pg.sprite.Sprite):
 
     def update(self, dt):
         self.set_ui()
-        print self.speed
 
         if self.health <= 0:
             self.dead = True
