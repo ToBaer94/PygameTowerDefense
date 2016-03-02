@@ -8,7 +8,7 @@ from level import Level
 
 ui_dir = path.join(path.dirname(__file__), pardir, "assets", "ui")
 tower_dir = path.join(path.dirname(__file__), pardir, "assets", "towers")
-
+trap_dir = path.join(path.dirname(__file__), pardir, "assets", "traps")
 
 class GamePlay(GameState):
     def __init__(self):
@@ -76,13 +76,9 @@ class GamePlay(GameState):
                             node_list.append("node" + str(z))
 
         for node in node_list:
-            self.create_pathifinding(node)
+            self.create_pathfinding(node)
 
-
-
-
-
-    def create_pathifinding(self, node):
+    def create_pathfinding(self, node):
         self.tile_list = []
 
         start = 0
@@ -106,7 +102,7 @@ class GamePlay(GameState):
         came_from[str(start)] = None
         while not pathing.empty():
             current = pathing.get()
-            print current
+            #print current
 
             if current == end:
                 break
@@ -126,7 +122,6 @@ class GamePlay(GameState):
 
         self.pathing = final_path
         self.level.creep_path.append(self.pathing)
-
 
     def get_neighbors(self, node):
         dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]]
@@ -189,26 +184,34 @@ class GamePlay(GameState):
         self.tower_info = []
         name = self.highlighted_tower.name
         attack = self.highlighted_tower.damage
-        range = self.highlighted_tower.radius
+        attack_range = self.highlighted_tower.radius
         up_cost = self.highlighted_tower.upgrade_cost
-        if type(self.highlighted_tower).__name__ == "FireTower":
-            tick_frequency = self.highlighted_tower.tick_frequency
 
         if self.highlighted_tower.tier <= self.highlighted_tower.max_tier:
+
             self.tower_info.append(self.create_text(str(name)))
             self.tower_info.append(self.create_text("Damage: " + str(attack)))
+
             if type(self.highlighted_tower).__name__ == "FireTower":
+                tick_frequency = self.highlighted_tower.tick_frequency
                 self.tower_info.append(self.create_text("Damage every " + str(tick_frequency) + "ms"))
+
             else:
-                self.tower_info.append(self.create_text("Range: " + str(range)))
+                self.tower_info.append(self.create_text("Range: " + str(attack_range)))
+
             self.tower_info.append(self.create_text("Cost to Upgrade: " + str(up_cost)))
         else:
+
             self.tower_info.append(self.create_text(str(name)))
             self.tower_info.append(self.create_text("Damage: " + str(attack)))
+
             if type(self.highlighted_tower).__name__ == "FireTower":
+                tick_frequency = self.highlighted_tower.tick_frequency
                 self.tower_info.append(self.create_text("Damage every " + str(tick_frequency) + "ms"))
+
             else:
-                self.tower_info.append(self.create_text("Range: " + str(range)))
+
+                self.tower_info.append(self.create_text("Range: " + str(attack_range)))
             self.tower_info.append(self.create_text("Max upgrade tier reached"))
 
     def create_text(self, text):
@@ -218,6 +221,28 @@ class GamePlay(GameState):
         return render_text
 
     def draw_tower_preview(self, screen):
+        if self.selected_tower is not None:
+
+            name_text = self.create_text(str(self.level.tower_list[self.selected_tower].name))
+            name_rect = name_text.get_rect()
+            cost_text = self.create_text("Cost: " + str(self.level.tower_list[self.selected_tower].cost) + " Gold")
+            cost_rect = cost_text.get_rect()
+            damage_text = self.create_text("Damage: " + str(self.level.tower_list[self.selected_tower].damage))
+            damage_rect = damage_text.get_rect()
+
+            mouse_pos_x = self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth
+            if mouse_pos_x < 400:
+                pg.draw.rect(screen, pg.Color(255, 233, 114), [800-192, 412 - 2, 192, 100])
+                screen.blit(name_text, (800-192 + 10, 412 + name_rect.height))
+                screen.blit(cost_text, (800-192 + 10, 412 + 20 + cost_rect.height ))
+                screen.blit(damage_text, (800-192 + 10, 412 + 40 + damage_rect.height ))
+
+            elif mouse_pos_x >= 400:
+                pg.draw.rect(screen, pg.Color(255, 233, 114), [0, 412 - 2, 192, 100])
+                screen.blit(name_text, (0 + 10, 412 + name_rect.height))
+                screen.blit(cost_text, (0 + 10, 412 + 20 + cost_rect.height))
+                screen.blit(damage_text, (0 + 10, 412 + 40 + damage_rect.height))
+
         try:
 
             if self.props["can_build"] == "True" and self.selected_tower is not None:
@@ -232,6 +257,29 @@ class GamePlay(GameState):
                 pg.draw.circle(screen, pg.Color("black"), ([self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth + 16,
                                                                   self.cursor_y * self.level.tile_renderer.tmx_data.tileheight + 16]), radius, 1)
                 screen.blit(pg.image.load(path.join(tower_dir, "tower" + str(self.selected_tower + 1) + ".png")), (self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth,
+                                                                                                                   self.cursor_y * self.level.tile_renderer.tmx_data.tileheight))
+
+
+
+
+
+        except KeyError:
+            pass
+            # print "Key 'can_build' not in dictionary 'self.props'"
+            # print "Mouse cursor must be outside of the map area (e.g. on top of the UI)"
+
+    def draw_trap_preview(self, screen):
+        try:
+
+            if self.props["can_build"] == "False" and self.selected_trap is not None:
+                pg.draw.rect(self.screen, pg.Color("black"), [self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth,
+                                                              self.cursor_y * self.level.tile_renderer.tmx_data.tileheight,
+                                                              self.level.tile_renderer.tmx_data.tilewidth,
+                                                              self.level.tile_renderer.tmx_data.tileheight
+                                                              ], 1
+                             )
+
+                screen.blit(pg.image.load(path.join(trap_dir, "trap" + str(self.selected_trap + 1) + ".png")), (self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth,
                                                                                                                    self.cursor_y * self.level.tile_renderer.tmx_data.tileheight))
         except KeyError:
             pass
@@ -275,28 +323,27 @@ class GamePlay(GameState):
             self.create_tower_info()
 
             if self.highlighted_tower.rect.x < 400:
-                pg.draw.rect(screen, pg.Color(255, 233, 114), [800-192, 450 - 2, 192, 200])
+                pg.draw.rect(screen, pg.Color(255, 233, 114), [800-230, 412 - 2, 230, 100])
                 for index, text in enumerate(self.tower_info):
                     rect = text.get_rect()
-                    screen.blit(text, (800-192 + 10, 450 + 20 + index * (rect.height + 2)))
+                    screen.blit(text, (800-230 + 10, 412 + 20 + index * (rect.height + 2)))
 
             elif self.highlighted_tower.rect.x >= 400:
-                pg.draw.rect(screen, pg.Color(255, 233, 114), [0, 312 - 2, 192, 200])
+                pg.draw.rect(screen, pg.Color(255, 233, 114), [0, 412 - 2, 230, 100])
                 for index, text in enumerate(self.tower_info):
                     rect = text.get_rect()
-                    screen.blit(text, (0 + 10, 312 + 20 + index * (rect.height + 2)))
+                    screen.blit(text, (0 + 10, 412 + 20 + index * (rect.height + 2)))
 
         if self.money_ui is not None:
             screen.blit(self.money_ui, (800-192 + 10, 512 + 40))
 
-        for x in range(0, 3):
-            for location in self.level.creep_path[x]:
-                pg.draw.rect(screen, pg.Color("black"), [location[0] * 32, location[1] * 32, 32, 32], 1)
     def draw(self, screen):
         screen.fill(pg.Color("white"))
         self.level.draw(screen)
         self.draw_tower_preview(screen)
+        self.draw_trap_preview(screen)
         self.draw_ui(screen)
+        # self.draw_debug_pathfinding(screen)
 
     def select_tower(self, x, y):
         if self.highlighted_tower is None and self.selected_trap is None:
@@ -329,8 +376,9 @@ class GamePlay(GameState):
         if self.highlighted_tower is not None:
             if self.level.money >= self.highlighted_tower.upgrade_cost and self.highlighted_tower.tier <= self.highlighted_tower.max_tier:
                 if self.button_1_rect.collidepoint(x, y):
-                    self.highlighted_tower.upgrade_attack()
                     self.level.money -= self.highlighted_tower.upgrade_cost
+                    self.highlighted_tower.upgrade_attack()
+
                 elif self.button_2_rect.collidepoint(x, y):
                     self.level.money -= self.highlighted_tower.upgrade_cost
                     if type(self.highlighted_tower).__name__ == "FireTower":
@@ -380,8 +428,7 @@ class GamePlay(GameState):
                             self.create_tower(x, y, self.selected_tower)
                             self.level.money -= self.level.tower_list[self.selected_tower].cost
 
-
-        #Catch the keyerror in case the self.props dict wasnt updated yet
+        # Catch the keyerror in case the self.props dict wasnt updated yet
         except KeyError:
             print "Key 'can_build' not in dictionary 'self.props'"
             print "Mouse cursor must be outside of the map area (e.g. on top of the UI)"
@@ -397,6 +444,11 @@ class GamePlay(GameState):
         y = y // self.level.tile_renderer.tmx_data.tileheight
         trap = self.level.trap_list[selected](x * self.level.tile_renderer.tmx_data.tilewidth, y * self.level.tile_renderer.tmx_data.tileheight, self.level)
         self.level.trap_group.add(trap)
+
+    def draw_debug_pathfinding(self, screen):
+        for x in range(0, len(self.level.creep_path)):
+            for location in self.level.creep_path[x]:
+                pg.draw.rect(screen, pg.Color("black"), [location[0] * 32, location[1] * 32, 32, 32], 1)
 
 
 

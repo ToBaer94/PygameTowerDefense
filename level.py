@@ -103,7 +103,7 @@ class Spawner(object):
 
     def spawn_standard_enemy(self):
         path = random.randint(0, len(self.level.creep_path) - 1)
-        print path
+        #print path
         creep = Creep(self.level, self.level.creep_path[path])
         self.level.creep_group.add(creep)
 
