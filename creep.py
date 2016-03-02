@@ -15,8 +15,8 @@ BLACK = pg.Color("black")
 class Creep(pg.sprite.Sprite):
     total_health = 100
     health = 100
-    speed = 0.3
-    orig_speed = 0.3
+    speed = 0.5
+    orig_speed = 0.5
 
     def __init__(self, level, pathing):
         super(Creep, self).__init__()
@@ -24,8 +24,11 @@ class Creep(pg.sprite.Sprite):
         self.image = pg.image.load(path.join(creep_dir, "enemy.png")).convert_alpha()
 
         self.level = level
-        self.start_pos = self.level.start_pos
-        self.end_pos = self.level.end_pos
+
+        self.pathing = pathing
+
+        self.start_pos = self.pathing[0]
+        self.end_pos = self.pathing[-1]
 
         self.rect = self.image.get_rect(topleft = (32 * self.start_pos[0], 32 * self.start_pos[1]))
         self.radius = 16
@@ -36,7 +39,8 @@ class Creep(pg.sprite.Sprite):
 
         self.dead = False
 
-        self.pathing = pathing
+
+
         self.start_index = 1
         self.moved_pixels = 0
         self.color = GREEN
