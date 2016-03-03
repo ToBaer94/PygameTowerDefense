@@ -2,6 +2,7 @@ import pygame as pg
 from base_state import GameState
 from os import path, pardir
 import Queue
+from constants import SCREEN_HEIGHT, SCREEN_WIDTH, TILE_WIDTH, TILE_HEIGHT, UI_COLOR, WHITE, BLACK
 Vector = pg.math.Vector2
 
 from level import Level
@@ -10,12 +11,14 @@ ui_dir = path.join(path.dirname(__file__), pardir, "assets", "ui")
 tower_dir = path.join(path.dirname(__file__), pardir, "assets", "towers")
 trap_dir = path.join(path.dirname(__file__), pardir, "assets", "traps")
 
+
 class GamePlay(GameState):
     def __init__(self):
         super(GamePlay, self).__init__()
         self.next_state = "MENU"
 
         self.ui = pg.image.load(path.join(ui_dir, "uitemplate.png")).convert_alpha()
+        self.upgrade_ui = pg.image.load(path.join(ui_dir, "ui_upgrade.png")).convert_alpha()
         self.tower_ui_1 = pg.image.load(path.join(ui_dir, "tower_1_button.png")).convert_alpha()
         self.tower_ui_1_rect = self.tower_ui_1.get_rect(topleft = (0+21, 512+19))
 
@@ -31,19 +34,23 @@ class GamePlay(GameState):
         self.tower_ui_5 = pg.image.load(path.join(ui_dir, "tower_5_button.png")).convert_alpha()
         self.tower_ui_5_rect = self.tower_ui_5.get_rect(topleft=(0+363, 512+19))
 
+        self.tower_ui_6 = pg.image.load(path.join(ui_dir, "tower_6_button.png")).convert_alpha()
+        self.tower_ui_6_rect = self.tower_ui_6.get_rect(topleft=(0+525, 512+19))
+
         self.trap_ui_1 = pg.image.load(path.join(ui_dir, "trap_1_button.png")).convert_alpha()
         self.trap_ui_1_rect = self.trap_ui_1.get_rect(topleft=(0 + 440, 512 + 19))
 
-        self.button_1 = pg.image.load(path.join(ui_dir, "upgrade_button.png")).convert_alpha() # Up damage
-        self.button_1_rect = self.button_1.get_rect()
+        self.upgrade_attack_button = pg.image.load(path.join(ui_dir, "upgrade_button.png")).convert_alpha() # Up damage
+        self.upgrade_range_button = pg.image.load(path.join(ui_dir, "upgrade_button_2.png")).convert_alpha() # Up range
+        self.upgrade_dps_button = pg.image.load(path.join(ui_dir, "upgrade_button_3.png")).convert_alpha() # Up firetower DPS
+        self.upgrade_slow_duration_button = pg.image.load(path.join(ui_dir, "upgrade_button_4.png")).convert_alpha()
+        self.upgrade_slow_modifier_button = pg.image.load(path.join(ui_dir, "upgrade_button_5.png")).convert_alpha()
 
-        self.button_2 = pg.image.load(path.join(ui_dir, "upgrade_button_2.png")).convert_alpha() # Up range
-        self.button_2_rect = self.button_2.get_rect()
+        self.sell_button = pg.image.load(path.join(ui_dir, "sell_button.png")).convert_alpha() # Sell Tower
 
-        self.button_3 = pg.image.load(path.join(ui_dir, "upgrade_button_3.png")).convert_alpha() # Up firetower DPS
-
-        self.button_4 = pg.image.load(path.join(ui_dir, "sell_button.png")).convert_alpha() # Sell Tower
-        self.button_4_rect = self.button_4.get_rect()
+        self.button_1_rect = self.upgrade_attack_button.get_rect()
+        self.button_2_rect = self.upgrade_range_button.get_rect()
+        self.button_3_rect = self.sell_button.get_rect()
 
         self.selected_tower = None
         self.highlighted_tower = None
@@ -78,7 +85,7 @@ class GamePlay(GameState):
         for node in node_list:
             self.create_pathfinding(node)
 
-    def create_pathfinding(self, node):
+    def create_pathfinding(self, node_name):
         self.tile_list = []
 
         start = 0
@@ -86,8 +93,8 @@ class GamePlay(GameState):
         for x in range(self.level.tile_renderer.tmx_data.width):
             for y in range(self.level.tile_renderer.tmx_data.height):
                 tile_property = self.level.tile_renderer.tmx_data.get_tile_properties(x, y, 0)
-                if node in tile_property:
-                    if tile_property[node] == "True":
+                if node_name in tile_property:
+                    if tile_property[node_name] == "True":
                         self.tile_list.append([x, y])
                 if "bridge" in tile_property:
                     if tile_property["bridge"] == "True":
@@ -196,6 +203,11 @@ class GamePlay(GameState):
                 tick_frequency = self.highlighted_tower.tick_frequency
                 self.tower_info.append(self.create_text("Damage every " + str(tick_frequency) + "ms"))
 
+            elif type(self.highlighted_tower).__name__ == "SlowTower":
+                slow = self.highlighted_tower.speed_mod
+                duration = self.highlighted_tower.slow_duration
+                self.tower_info.append(self.create_text("Slow: " + str(slow * 100) + "% " + "for " + str(duration) + " ms"))
+
             else:
                 self.tower_info.append(self.create_text("Range: " + str(attack_range)))
 
@@ -209,6 +221,11 @@ class GamePlay(GameState):
                 tick_frequency = self.highlighted_tower.tick_frequency
                 self.tower_info.append(self.create_text("Damage every " + str(tick_frequency) + "ms"))
 
+            elif type(self.highlighted_tower).__name__ == "SlowTower":
+                slow = self.highlighted_tower.speed_mod
+                duration = self.highlighted_tower.slow_duration
+                self.tower_info.append(self.create_text("Slow: " + str(slow * 100) + "% " + "for " + str(duration) + "ms"))
+
             else:
 
                 self.tower_info.append(self.create_text("Range: " + str(attack_range)))
@@ -217,7 +234,7 @@ class GamePlay(GameState):
     def create_text(self, text):
         text = str(text)
         font = pg.font.Font(None, 24)
-        render_text = font.render(text, True, pg.Color("black"))
+        render_text = font.render(text, True, BLACK)
         return render_text
 
     def draw_tower_preview(self, screen):
@@ -227,42 +244,52 @@ class GamePlay(GameState):
             name_rect = name_text.get_rect()
             cost_text = self.create_text("Cost: " + str(self.level.tower_list[self.selected_tower].cost) + " Gold")
             cost_rect = cost_text.get_rect()
+
             damage_text = self.create_text("Damage: " + str(self.level.tower_list[self.selected_tower].damage))
             damage_rect = damage_text.get_rect()
 
+            special_text = None
+            if self.level.tower_list[self.selected_tower].__name__ == "SlowTower":
+                special_text = self.create_text("Slow modifier: " + str(self.level.tower_list[self.selected_tower].speed_mod * 100) + "%")
+                special_rect = special_text.get_rect()
+
+            if self.level.tower_list[self.selected_tower].__name__ == "FireTower":
+                special_text = self.create_text("every " + str(self.level.tower_list[self.selected_tower].tick_frequency) + "ms")
+                special_rect = special_text.get_rect()
+
             mouse_pos_x = self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth
             if mouse_pos_x < 400:
-                pg.draw.rect(screen, pg.Color(255, 233, 114), [800-192, 412 - 2, 192, 100])
-                screen.blit(name_text, (800-192 + 10, 412 + name_rect.height))
-                screen.blit(cost_text, (800-192 + 10, 412 + 20 + cost_rect.height ))
-                screen.blit(damage_text, (800-192 + 10, 412 + 40 + damage_rect.height ))
+                pg.draw.rect(screen, UI_COLOR, [SCREEN_WIDTH - 192, 412 - 2, 192, 100])
+                screen.blit(name_text, (SCREEN_WIDTH - 192 + 10, 412 + name_rect.height))
+                screen.blit(cost_text, (SCREEN_WIDTH - 192 + 10, 412 + 20 + cost_rect.height ))
+                screen.blit(damage_text, (SCREEN_WIDTH - 192 + 10, 412 + 40 + damage_rect.height ))
+                if special_text:
+                    screen.blit(special_text, (SCREEN_WIDTH - 192 + 10, 412 + 60 + special_rect.height ))
 
             elif mouse_pos_x >= 400:
-                pg.draw.rect(screen, pg.Color(255, 233, 114), [0, 412 - 2, 192, 100])
+                pg.draw.rect(screen, UI_COLOR, [0, 412 - 2, 192, 100])
                 screen.blit(name_text, (0 + 10, 412 + name_rect.height))
                 screen.blit(cost_text, (0 + 10, 412 + 20 + cost_rect.height))
                 screen.blit(damage_text, (0 + 10, 412 + 40 + damage_rect.height))
+                if special_text:
+                    screen.blit(special_text, (0 + 10, 412 + 60 + special_rect.height ))
 
         try:
 
             if self.props["can_build"] == "True" and self.selected_tower is not None:
                 radius = self.level.tower_list[self.selected_tower].radius
-                pg.draw.rect(self.screen, pg.Color("black"), [self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth,
-                                                              self.cursor_y * self.level.tile_renderer.tmx_data.tileheight,
-                                                              self.level.tile_renderer.tmx_data.tilewidth,
-                                                              self.level.tile_renderer.tmx_data.tileheight
-                                                              ], 1
+                tower_image = pg.image.load(path.join(tower_dir, "tower" + str(self.selected_tower + 1) + ".png"))
+
+                pg.draw.rect(self.screen, BLACK, [self.cursor_x * TILE_WIDTH,
+                                                  self.cursor_y * TILE_HEIGHT,
+                                                  TILE_WIDTH,
+                                                  TILE_HEIGHT
+                                                  ], 1
                              )
 
-                pg.draw.circle(screen, pg.Color("black"), ([self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth + 16,
-                                                                  self.cursor_y * self.level.tile_renderer.tmx_data.tileheight + 16]), radius, 1)
-                screen.blit(pg.image.load(path.join(tower_dir, "tower" + str(self.selected_tower + 1) + ".png")), (self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth,
-                                                                                                                   self.cursor_y * self.level.tile_renderer.tmx_data.tileheight))
-
-
-
-
-
+                pg.draw.circle(screen, BLACK, ([self.cursor_x * TILE_WIDTH + 16,
+                                                self.cursor_y * TILE_HEIGHT + 16]), radius, 1)
+                screen.blit(tower_image, (self.cursor_x * TILE_WIDTH, self.cursor_y * TILE_HEIGHT))
         except KeyError:
             pass
             # print "Key 'can_build' not in dictionary 'self.props'"
@@ -272,11 +299,11 @@ class GamePlay(GameState):
         try:
 
             if self.props["can_build"] == "False" and self.selected_trap is not None:
-                pg.draw.rect(self.screen, pg.Color("black"), [self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth,
-                                                              self.cursor_y * self.level.tile_renderer.tmx_data.tileheight,
-                                                              self.level.tile_renderer.tmx_data.tilewidth,
-                                                              self.level.tile_renderer.tmx_data.tileheight
-                                                              ], 1
+                pg.draw.rect(self.screen, BLACK, [self.cursor_x * TILE_WIDTH,
+                                                  self.cursor_y * TILE_HEIGHT,
+                                                  TILE_WIDTH,
+                                                  TILE_HEIGHT
+                                                  ], 1
                              )
 
                 screen.blit(pg.image.load(path.join(trap_dir, "trap" + str(self.selected_trap + 1) + ".png")), (self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth,
@@ -287,58 +314,76 @@ class GamePlay(GameState):
             # print "Mouse cursor must be outside of the map area (e.g. on top of the UI)"
 
     def draw_ui(self, screen):
-        screen.blit(self.ui, (0, 512))
-        screen.blit(self.tower_ui_1, (0+21, 512+19))
-        screen.blit(self.tower_ui_2, (0+110, 512+19))
-        screen.blit(self.tower_ui_3, (0+193, 512+19))
-        screen.blit(self.tower_ui_4, (0+277, 512+19))
-        screen.blit(self.tower_ui_5, (0+363, 512+19))
-        screen.blit(self.trap_ui_1, (self.trap_ui_1_rect))
 
+        if self.highlighted_tower is None:
+            screen.blit(self.ui, (0, 512))
+            screen.blit(self.tower_ui_1, (0+21, 512+19))
+            screen.blit(self.tower_ui_2, (0+110, 512+19))
+            screen.blit(self.tower_ui_3, (0+193, 512+19))
+            screen.blit(self.tower_ui_4, (0+277, 512+19))
+            screen.blit(self.tower_ui_5, (0+363, 512+19))
+            screen.blit(self.tower_ui_6, (0+525, 512+19))
+            screen.blit(self.trap_ui_1, self.trap_ui_1_rect)
 
-
-
-        if self.highlighted_tower is not None:
-
-            pg.draw.rect(screen, pg.Color("black"), [self.highlighted_tower.rect.x, self.highlighted_tower.rect.y,
+        else:
+            screen.blit(self.upgrade_ui, (0, 512))
+            pg.draw.rect(screen, BLACK, [self.highlighted_tower.rect.x, self.highlighted_tower.rect.y,
                                                      self.highlighted_tower.rect.width, self.highlighted_tower.rect.height], 1)
 
-            self.highlighted_tower.draw2(screen)
+            self.highlighted_tower.draw2(screen) # Draw circle in tower range
 
-            if self.highlighted_tower.tier <= self.highlighted_tower.max_tier:
-                screen.blit(self.button_1, (self.highlighted_tower.rect.x - self.button_1_rect.width - 1, self.highlighted_tower.rect.y - self.button_1_rect.height))
-                self.button_1_rect.x, self.button_1_rect.y = (self.highlighted_tower.rect.x - self.button_1_rect.width - 1, self.highlighted_tower.rect.y - self.button_1_rect.height)
-
-                if type(self.highlighted_tower).__name__ == "FireTower":
-                    screen.blit(self.button_3, (self.highlighted_tower.rect.x + self.highlighted_tower.rect.width + 1, self.highlighted_tower.rect.y - self.button_2_rect.height))
-                    self.button_2_rect.x, self.button_2_rect.y = (self.highlighted_tower.rect.x + self.highlighted_tower.rect.width + 1, self.highlighted_tower.rect.y - self.button_2_rect.height)
-
-                else:
-                    screen.blit(self.button_2, (self.highlighted_tower.rect.x + self.highlighted_tower.rect.width + 1, self.highlighted_tower.rect.y - self.button_2_rect.height))
-                    self.button_2_rect.x, self.button_2_rect.y = (self.highlighted_tower.rect.x + self.highlighted_tower.rect.width + 1, self.highlighted_tower.rect.y - self.button_2_rect.height)
-
-                screen.blit(self.button_4, (self.highlighted_tower.rect.x + 1, self.highlighted_tower.rect.y - self.button_4_rect.height))
-                self.button_4_rect.x, self.button_4_rect.y = (self.highlighted_tower.rect.x + 1, self.highlighted_tower.rect.y - self.button_4_rect.height)
+            self.display_upgrade_ui(screen)
 
             self.create_tower_info()
-
-            if self.highlighted_tower.rect.x < 400:
-                pg.draw.rect(screen, pg.Color(255, 233, 114), [800-230, 412 - 2, 230, 100])
-                for index, text in enumerate(self.tower_info):
-                    rect = text.get_rect()
-                    screen.blit(text, (800-230 + 10, 412 + 20 + index * (rect.height + 2)))
-
-            elif self.highlighted_tower.rect.x >= 400:
-                pg.draw.rect(screen, pg.Color(255, 233, 114), [0, 412 - 2, 230, 100])
-                for index, text in enumerate(self.tower_info):
-                    rect = text.get_rect()
-                    screen.blit(text, (0 + 10, 412 + 20 + index * (rect.height + 2)))
+            self.display_tower_info(screen)
 
         if self.money_ui is not None:
             screen.blit(self.money_ui, (800-192 + 10, 512 + 40))
 
+    def display_upgrade_ui(self, screen):
+        if self.highlighted_tower.tier <= self.highlighted_tower.max_tier:
+            if type(self.highlighted_tower).__name__ != "SlowTower":
+                screen.blit(self.upgrade_attack_button, (0 + 21, 512 + 19))
+                self.button_1_rect.x, self.button_1_rect.y = (0+21, 512+19)
+
+            elif type(self.highlighted_tower).__name__ == "SlowTower":
+                screen.blit(self.upgrade_slow_duration_button, (0 + 21, 512 + 19))
+                self.button_1_rect.x, self.button_1_rect.y = (0+21, 512+19)
+
+            else:
+                screen.blit(self.upgrade_attack_button, (0 + 21, 512 + 19))
+                self.button_1_rect.x, self.button_1_rect.y = (0+21, 512+19)
+
+            if type(self.highlighted_tower).__name__ == "FireTower":
+                screen.blit(self.upgrade_dps_button, (0 + 110, 512 + 19))
+                self.button_2_rect.x, self.button_2_rect.y = (0+110, 512+19)
+
+            elif type(self.highlighted_tower).__name__ == "SlowTower":
+                screen.blit(self.upgrade_slow_modifier_button, (0 + 110, 512 + 19))
+                self.button_2_rect.x, self.button_2_rect.y = (0+110, 512+19)
+
+            else:
+                screen.blit(self.upgrade_range_button, (0 + 110, 512 + 19))
+                self.button_2_rect.x, self.button_2_rect.y = (0+110, 512+19)
+
+            screen.blit(self.sell_button, (0 + 193, 512 + 19))
+            self.button_3_rect.x, self.button_3_rect.y = (0 + 193, 512 + 19)
+
+    def display_tower_info(self, screen):
+        if self.highlighted_tower.rect.x < 400:
+            pg.draw.rect(screen, UI_COLOR, [SCREEN_WIDTH - 230, 412 - 2, 230, 100])
+            for index, text in enumerate(self.tower_info):
+                rect = text.get_rect()
+                screen.blit(text, (SCREEN_WIDTH - 230 + 10, 412 + 20 + index * (rect.height + 2)))
+
+        elif self.highlighted_tower.rect.x >= 400:
+            pg.draw.rect(screen, UI_COLOR, [0, 412 - 2, 230, 100])
+            for index, text in enumerate(self.tower_info):
+                rect = text.get_rect()
+                screen.blit(text, (0 + 10, 412 + 20 + index * (rect.height + 2)))
+
     def draw(self, screen):
-        screen.fill(pg.Color("white"))
+        screen.fill(WHITE)
         self.level.draw(screen)
         self.draw_tower_preview(screen)
         self.draw_trap_preview(screen)
@@ -362,6 +407,9 @@ class GamePlay(GameState):
             elif self.tower_ui_5_rect.collidepoint(x, y):
                 self.selected_tower = 4
 
+            elif self.tower_ui_6_rect.collidepoint(x, y):
+                self.selected_tower = 5
+
         if self.selected_tower is None and self.selected_trap is None:
             for tower in self.level.tower_group:
                 if tower.rect.collidepoint(x, y):
@@ -374,19 +422,25 @@ class GamePlay(GameState):
 
     def upgrade_tower(self, x, y):
         if self.highlighted_tower is not None:
-            if self.level.money >= self.highlighted_tower.upgrade_cost and self.highlighted_tower.tier <= self.highlighted_tower.max_tier:
+            if self.level.money >= self.highlighted_tower.upgrade_cost \
+                    and self.highlighted_tower.tier <= self.highlighted_tower.max_tier:
                 if self.button_1_rect.collidepoint(x, y):
                     self.level.money -= self.highlighted_tower.upgrade_cost
-                    self.highlighted_tower.upgrade_attack()
+                    if type(self.highlighted_tower).__name__ == "SlowTower":
+                        self.highlighted_tower.upgrade_slow_duration()
+                    else:
+                        self.highlighted_tower.upgrade_attack()
 
                 elif self.button_2_rect.collidepoint(x, y):
                     self.level.money -= self.highlighted_tower.upgrade_cost
                     if type(self.highlighted_tower).__name__ == "FireTower":
                         self.highlighted_tower.upgrade_damage_tick_frequency()
+                    elif type(self.highlighted_tower).__name__ == "SlowTower":
+                        self.highlighted_tower.upgrade_slow_modifier()
                     else:
                         self.highlighted_tower.upgrade_radius()
 
-            if self.button_4_rect.collidepoint(x, y):
+            if self.button_3_rect.collidepoint(x, y):
                 self.sell_tower()
 
     def sell_tower(self):
@@ -436,19 +490,25 @@ class GamePlay(GameState):
     def create_tower(self, x, y, selected):
         x = x // self.level.tile_renderer.tmx_data.tilewidth
         y = y // self.level.tile_renderer.tmx_data.tileheight
-        tower = self.level.tower_list[selected](x * self.level.tile_renderer.tmx_data.tilewidth, y * self.level.tile_renderer.tmx_data.tileheight, self.level)
+
+        tower = self.level.tower_list[selected](x * self.level.tile_renderer.tmx_data.tilewidth,
+                                                y * self.level.tile_renderer.tmx_data.tileheight,
+                                                self.level)
         self.level.tower_group.add(tower)
 
     def create_trap(self, x, y, selected):
         x = x // self.level.tile_renderer.tmx_data.tilewidth
         y = y // self.level.tile_renderer.tmx_data.tileheight
-        trap = self.level.trap_list[selected](x * self.level.tile_renderer.tmx_data.tilewidth, y * self.level.tile_renderer.tmx_data.tileheight, self.level)
+        trap = self.level.trap_list[selected](x * self.level.tile_renderer.tmx_data.tilewidth,
+                                              y * self.level.tile_renderer.tmx_data.tileheight,
+                                              self.level)
         self.level.trap_group.add(trap)
 
     def draw_debug_pathfinding(self, screen):
         for x in range(0, len(self.level.creep_path)):
             for location in self.level.creep_path[x]:
-                pg.draw.rect(screen, pg.Color("black"), [location[0] * 32, location[1] * 32, 32, 32], 1)
+                pg.draw.rect(screen, BLACK, [location[0] * TILE_WIDTH, location[1] * TILE_HEIGHT,
+                                                         TILE_WIDTH, TILE_HEIGHT], 1)
 
 
 

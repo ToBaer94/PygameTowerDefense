@@ -1,6 +1,6 @@
 import pygame as pg
 from os import path, pardir
-from bullet import Bullet, ExplosiveBullet, Beam, SlowBullet
+from bullet import Bullet, ExplosiveBullet, Beam, SlowBullet, AimlessBullet
 import copy
 Vector = pg.math.Vector2
 
@@ -88,9 +88,43 @@ class SlowTower(Tower):
         self.image = pg.image.load(path.join(tower_dir, "tower5.png")).convert_alpha()
         self.rect = self.image.get_rect(topleft=(x, y))
 
+    def update(self, dt):
+        target = None
+        shortest_distance = 100000 # "Infinite"
+
+        collision_group = pg.sprite.spritecollide(self, self.creeps, False, self.check_collision)
+        for creep in collision_group:
+                new_distance = self.pos.distance_to(creep.pos)
+                if target is None:
+                    target = creep
+                    shortest_distance = new_distance
+                else:
+                    if target.slowed:
+                        target = creep
+                        shortest_distance = new_distance
+
+
+
+        now = pg.time.get_ticks()
+        if now - self.last_bullet > self.bullet_cd and target is not None:
+            self.last_bullet = now
+            self.shoot_bullet(target)
+
     def shoot_bullet(self, target):
         bullet = SlowBullet(self.rect.x, self.rect.y, self.level, self.damage, self.bullet_speed, target, self.speed_mod, self.slow_duration)
         self.level.bullet_group.add(bullet)
+
+    def upgrade_slow_modifier(self):
+        if self.tier <= self.max_tier:
+            self.speed_mod -= 0.1
+            self.tier += 1
+            self.upgrade_cost += 100
+
+    def upgrade_slow_duration(self):
+        if self.tier <= self.max_tier:
+            self.slow_duration += 200
+            self.tier += 1
+            self.upgrade_cost += 100
 
 
 class Tower2(Tower):
@@ -211,6 +245,37 @@ class FireTower(Tower):
             self.tick_frequency -= 50
             self.tier += 1
             self.upgrade_cost += 100
+
+
+class MultiTower(Tower):
+    name = "Multi Tower"
+    radius = 100
+    damage = 1
+    tier = 1
+    cost = 300
+    upgrade_cost = 70
+    bullet_cd = 2500
+    bullet_speed = 2
+
+    def __init__(self, x, y, level):
+        super(MultiTower, self).__init__(x, y, level)
+        self.image = pg.image.load(path.join(tower_dir, "tower6.png")).convert_alpha()
+
+        self.direction_list = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]]
+
+
+    def update(self, dt):
+        collision_group = pg.sprite.spritecollide(self, self.creeps, False, self.check_collision)
+
+        now = pg.time.get_ticks()
+        if now - self.last_bullet > self.bullet_cd and collision_group:
+            self.last_bullet = now
+            self.shoot_bullets()
+
+    def shoot_bullets(self):
+        for direction in self.direction_list:
+            bullet = AimlessBullet(self.rect.x, self.rect.y, self.level, self.damage, self.bullet_speed, direction, self.radius)
+            self.level.bullet_group.add(bullet)
 
 
 

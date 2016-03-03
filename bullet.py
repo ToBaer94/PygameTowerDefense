@@ -31,7 +31,7 @@ class Bullet(pg.sprite.Sprite):
     def update(self, dt):
 
         if self.target.rect.collidepoint(self.rect.center):
-            self.target.health -= self.damage
+            self.target.take_damage(self.damage)
             self.kill()
 
         if self.target.dead:
@@ -58,7 +58,7 @@ class SlowBullet(Bullet):
     def update(self, dt):
 
         if self.target.rect.collidepoint(self.rect.center):
-            self.target.health -= self.damage
+            # self.target.take_damage(self.damage)
             self.target.set_slowed(self.speed_modifier, self.slow_duration)
             self.kill()
 
@@ -99,7 +99,7 @@ class ExplosiveBullet(Bullet):
                 collision_group = pg.sprite.spritecollide(self, self.creeps, False, self.check_collision)
                 print collision_group
                 for creep in collision_group:
-                    creep.health -= 1
+                    creep.take_damage(self.damage)
 
                 return
 
@@ -189,7 +189,7 @@ class Beam(Bullet):
         if now - self.last_hit_check > self.tick_frequency:
             self.last_hit_check = now
             for creep in hit_list:
-                creep.health -= 1
+                creep.take_damage(self.damage)
 
 
 
@@ -200,6 +200,33 @@ class Beam(Bullet):
         if circle[1] + other.radius > distance:
             return True
         return False
+
+
+class AimlessBullet(Bullet):
+
+    def __init__(self, x, y, level, damage, speed, direction, bullet_range, target=None):
+        super(AimlessBullet, self).__init__(x, y, level, damage, speed, target)
+
+        self.direction = Vector(direction)
+        self.direction = self.direction.normalize()
+        self.bullet_range = bullet_range
+        self.moved_pixels = 0
+
+    def update(self, dt):
+
+        for creep in self.level.creep_group:
+            if self.rect.colliderect(creep):
+                creep.take_damage(self.damage)
+                self.kill()
+
+        self.pos.x += self.direction.x * self.speed * dt
+        self.pos.y += self.direction.y * self.speed * dt
+        self.rect.x = self.pos.x
+        self.rect.y = self.pos.y
+
+        self.moved_pixels += abs(self.direction.x * self.speed * dt) + abs(self.direction.y * self.speed * dt)
+        if self.moved_pixels >= self.bullet_range:
+            self.kill()
 
 
 class Rotator(object):

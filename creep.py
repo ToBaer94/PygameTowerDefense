@@ -1,27 +1,25 @@
 import pygame as pg
-from os import path, pardir
-import copy
+from os import path
+from constants import RED, YELLOW, GREEN, BLACK
+import random
 Vector = pg.math.Vector2
 
 
 creep_dir = path.join(path.dirname(__file__), "assets", "creeps")
 
-RED = pg.Color("red")
-YELLOW = pg.Color("yellow")
-GREEN = pg.Color("green")
-BLACK = pg.Color("black")
+
 
 
 class Creep(pg.sprite.Sprite):
-    total_health = 100
-    health = 100
+    total_health = 15.0
+    health = 15.0
     speed = 0.5
     orig_speed = 0.5
 
     def __init__(self, level, pathing):
         super(Creep, self).__init__()
 
-        self.image = pg.image.load(path.join(creep_dir, "enemy.png")).convert_alpha()
+        self.image = pg.image.load(path.join(creep_dir, "creep.png")).convert_alpha()
 
         self.level = level
 
@@ -38,8 +36,7 @@ class Creep(pg.sprite.Sprite):
         self.end = (32 * self.end_pos[0] + 16, 32 * self.end_pos[1] + 16)
 
         self.dead = False
-
-
+        self.slowed = False
 
         self.start_index = 1
         self.moved_pixels = 0
@@ -52,7 +49,6 @@ class Creep(pg.sprite.Sprite):
         target_vector = Vector(self.pathing[self.start_index][0] - self.pathing[self.start_index-1][0], self.pathing[self.start_index][1] - self.pathing[self.start_index-1][1]) #self.pathing[self.start_index][1])
 
         target_vector = target_vector.normalize()
-
 
         if self.moved_pixels > 32:
             self.start_index += 1
@@ -72,7 +68,7 @@ class Creep(pg.sprite.Sprite):
             self.level.game_over = True
 
         now = pg.time.get_ticks()
-        if now - self.slow_timer > self.slow_duration:
+        if now - self.slow_timer > self.slow_duration and self.slowed:
             self.slow_timer = 0
             self.speed = self.orig_speed
             self.slowed = False
@@ -92,9 +88,9 @@ class Creep(pg.sprite.Sprite):
         pg.draw.circle(screen, BLACK, self.rect.center, self.radius, 1)
 
     def set_ui(self):
-        if self.health >= 7:
+        if self.health / self.total_health >= 0.7:
             self.color = GREEN
-        elif self.health >= 4:
+        elif self.health / self.total_health >= 0.4:
             self.color = YELLOW
         else:
             self.color = RED
@@ -106,10 +102,62 @@ class Creep(pg.sprite.Sprite):
                                           (float(self.health) / self.total_health * self.rect.width // 2) + 4, 3])
 
     def set_slowed(self, modifier, duration):
+        print self.speed
         if not self.slowed:
             self.slowed = True
             self.slow_duration = duration
             self.speed *= modifier
+        print self.speed
         self.slow_timer = pg.time.get_ticks()
+
+    def take_damage(self, damage):
+        self.health -= damage
+
+
+class Worm(Creep):
+    total_health = 10.0
+    health = 10.0
+    speed = 0.8
+    orig_speed = 0.8
+    def __init__(self, level, pathing):
+        super(Worm, self).__init__(level, pathing)
+
+        self.image = pg.image.load(path.join(creep_dir, "worm.png")).convert_alpha()
+
+
+class Behemoth(Creep):
+    total_health = 30.0
+    health = 30.0
+    speed = 0.1
+    orig_speed = 0.1
+
+    def __init__(self, level, pathing):
+        super(Behemoth, self).__init__(level, pathing)
+
+        self.image = pg.image.load(path.join(creep_dir, "behemoth.png")).convert_alpha()
+
+    def take_damage(self, damage):
+        self.health -= damage
+        self.speed += 0.05
+        self.orig_speed += 0.05
+
+
+class SwiftWalker(Creep):
+    total_health = 20.0
+    health = 20.0
+    speed = 0.4
+    orig_speed = 0.4
+
+    def __init__(self, level, pathing):
+        super(SwiftWalker, self).__init__(level, pathing)
+        self.image = pg.image.load(path.join(creep_dir, "swiftwalker.png")).convert_alpha()
+
+    def take_damage(self, damage):
+        random_number = random.randint(1, 5)
+        if random_number == 1:
+            print "missed"
+        else:
+            self.health -= damage
+
 
 

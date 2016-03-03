@@ -1,8 +1,8 @@
 import pygame as pg
 import tilerenderer
-from tower import Tower, Tower2, ExplosiveTower, FireTower, SlowTower
+from tower import Tower, Tower2, ExplosiveTower, FireTower, SlowTower, MultiTower
 from trap import Mine
-from creep import Creep
+from creep import Creep, Worm, Behemoth, SwiftWalker
 from os import path, pardir
 
 import random
@@ -10,6 +10,11 @@ import random
 Vector = pg.math.Vector2
 
 level_dir = path.join(path.dirname(__file__), "assets", "levels")
+
+CREEP = 0
+WORM = 1
+BEHEMOTH = 2
+SWIFTWALKER = 3
 
 
 class Level(object):
@@ -25,7 +30,7 @@ class Level(object):
         self.bullet_group = pg.sprite.Group()
         self.beam_group = pg.sprite.Group()
 
-        self.tower_list = [Tower, Tower2, ExplosiveTower, FireTower, SlowTower]
+        self.tower_list = [Tower, Tower2, ExplosiveTower, FireTower, SlowTower, MultiTower]
         self.trap_list = [Mine]
         """
         self.start_pos = None
@@ -40,9 +45,15 @@ class Level(object):
         """
 
         self.spawner = Spawner(self)
-        self.waves = [10, 5, 7]
+        self.waves = [[3, 3, 3, 3],
+                      [0, 1, 1, 1],
+                      [0, 1, 0, 1, 0, 1],
+                      [1, 1, 2, 2, 2, 2, 3, 1, 0, 1, 3, 1],
+                      [0, 0]
+                     ]
         self.wave_number = 0
-        self.wave_length = self.waves[self.wave_number]
+        self.current_wave = self.waves[self.wave_number]
+        self.current_spawn = 0
         self.last_spawn = pg.time.get_ticks()
 
         self.money = 2000
@@ -51,13 +62,14 @@ class Level(object):
         self.game_over = False
 
     def update(self, dt):
-        #print self.wave_length
-        if self.wave_length > 0:
+        # print self.current_spawn, self.current_wave
+        if len(self.current_wave) > self.current_spawn:
             now = pg.time.get_ticks()
-            if now - self.last_spawn > 1:
+            if now - self.last_spawn > 1000:
                 self.last_spawn = now
-                self.spawner.spawn_standard_enemy()
-                self.wave_length -= 1
+                enemy = self.current_wave[self.current_spawn]
+                self.spawner.spawn_enemy(enemy)
+                self.current_spawn += 1
 
         self.tower_group.update(dt)
         self.trap_group.update(dt)
@@ -65,11 +77,12 @@ class Level(object):
         self.bullet_group.update(dt)
         self.beam_group.update(dt)
 
-        if self.wave_length == 0 and self.creep_group.__len__() == 0:
+        if self.current_spawn == len(self.current_wave) and self.creep_group.__len__() == 0:
             print "end of wave"
             if self.wave_number < len(self.waves) - 1:
                 self.wave_number += 1
-                self.wave_length = self.waves[self.wave_number]
+                self.current_wave = self.waves[self.wave_number]
+                self.current_spawn = 0
             else:
                 print "games over"
 
@@ -101,9 +114,19 @@ class Spawner(object):
     def __init__(self, level):
         self.level = level
 
-    def spawn_standard_enemy(self):
+    def spawn_enemy(self, enemy):
         path = random.randint(0, len(self.level.creep_path) - 1)
-        #print path
-        creep = Creep(self.level, self.level.creep_path[path])
+        if enemy == CREEP:
+            creep = Creep(self.level, self.level.creep_path[path])
+        elif enemy == WORM:
+            creep = Worm(self.level, self.level.creep_path[path])
+
+        elif enemy == BEHEMOTH:
+            creep = Behemoth(self.level, self.level.creep_path[path])
+
+        elif enemy == SWIFTWALKER:
+            creep = SwiftWalker(self.level, self.level.creep_path[path])
+        else:
+            print enemy, " is not a defined creep"
         self.level.creep_group.add(creep)
 
