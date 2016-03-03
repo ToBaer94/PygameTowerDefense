@@ -1,10 +1,11 @@
 import pygame as pg
 from os import path, pardir
 from bullet import Bullet, ExplosiveBullet, Beam, SlowBullet, AimlessBullet
-import copy
+from buttons.upgrade_button import UpgradeButton
 Vector = pg.math.Vector2
 
 tower_dir = path.join(path.dirname(__file__), "assets", "towers")
+ui_dir = path.join(path.dirname(__file__), "assets", "ui")
 
 
 class Tower(pg.sprite.Sprite):
@@ -17,6 +18,7 @@ class Tower(pg.sprite.Sprite):
     bullet_cd = 1000
     bullet_speed = 2
     max_tier = 5
+
     def __init__(self, x, y, level):
         super(Tower, self).__init__()
         self.image = pg.image.load(path.join(tower_dir, "tower.png")).convert_alpha()
@@ -25,8 +27,10 @@ class Tower(pg.sprite.Sprite):
         self.level = level
         self.creeps = self.level.creep_group
 
-
         self.last_bullet = pg.time.get_ticks()
+
+        self.upgrade_button_1 = UpgradeButton(path.join(ui_dir, "upgrade_damage.png"), 0+21, 512+19, self, self.upgrade_attack)
+        self.upgrade_button_2 = UpgradeButton(path.join(ui_dir, "upgrade_range.png"), 0+110, 512+19, self, self.upgrade_radius)
 
     def update(self, dt):
         target = None
@@ -72,61 +76,6 @@ class Tower(pg.sprite.Sprite):
         return False
 
 
-class SlowTower(Tower):
-    name = "Slow Tower"
-    radius = 100
-    damage = 0
-    tier = 1
-    cost = 200
-    bullet_cd = 1000
-    upgrade_cost = 50
-    bullet_speed = 1
-    speed_mod = 0.8
-    slow_duration = 3000
-    def __init__(self, x, y, level):
-        super(SlowTower, self).__init__(x, y, level)
-        self.image = pg.image.load(path.join(tower_dir, "tower5.png")).convert_alpha()
-        self.rect = self.image.get_rect(topleft=(x, y))
-
-    def update(self, dt):
-        target = None
-        shortest_distance = 100000 # "Infinite"
-
-        collision_group = pg.sprite.spritecollide(self, self.creeps, False, self.check_collision)
-        for creep in collision_group:
-                new_distance = self.pos.distance_to(creep.pos)
-                if target is None:
-                    target = creep
-                    shortest_distance = new_distance
-                else:
-                    if target.slowed:
-                        target = creep
-                        shortest_distance = new_distance
-
-
-
-        now = pg.time.get_ticks()
-        if now - self.last_bullet > self.bullet_cd and target is not None:
-            self.last_bullet = now
-            self.shoot_bullet(target)
-
-    def shoot_bullet(self, target):
-        bullet = SlowBullet(self.rect.x, self.rect.y, self.level, self.damage, self.bullet_speed, target, self.speed_mod, self.slow_duration)
-        self.level.bullet_group.add(bullet)
-
-    def upgrade_slow_modifier(self):
-        if self.tier <= self.max_tier:
-            self.speed_mod -= 0.1
-            self.tier += 1
-            self.upgrade_cost += 100
-
-    def upgrade_slow_duration(self):
-        if self.tier <= self.max_tier:
-            self.slow_duration += 200
-            self.tier += 1
-            self.upgrade_cost += 100
-
-
 class Tower2(Tower):
     name = "Cannon Tower"
     radius = 75
@@ -141,6 +90,9 @@ class Tower2(Tower):
         super(Tower2, self).__init__(x, y, level)
         self.image = pg.image.load(path.join(tower_dir, "tower2.png")).convert_alpha()
         self.rect = self.image.get_rect(topleft = (x, y))
+
+        self.upgrade_button_1 = UpgradeButton(path.join(ui_dir, "upgrade_damage.png"), 0+21, 512+19, self, self.upgrade_attack)
+        self.upgrade_button_2 = UpgradeButton(path.join(ui_dir, "upgrade_range.png"), 0+110, 512+19, self, self.upgrade_radius)
 
 
 class ExplosiveTower(Tower):
@@ -157,6 +109,10 @@ class ExplosiveTower(Tower):
         super(ExplosiveTower, self).__init__(x, y, level)
         self.image = pg.image.load(path.join(tower_dir, "tower3.png")).convert_alpha()
         self.rect = self.image.get_rect(topleft = (x, y))
+
+        self.upgrade_button_1 = UpgradeButton(path.join(ui_dir, "upgrade_damage.png"), 0+21, 512+19, self, self.upgrade_attack)
+        self.upgrade_button_2 = UpgradeButton(path.join(ui_dir, "upgrade_range.png"), 0+110, 512+19, self, self.upgrade_radius)
+
 
     def shoot_bullet(self, target):
         bullet = ExplosiveBullet(self.rect.x, self.rect.y, self.level, self.damage, self.speed, target)
@@ -183,6 +139,10 @@ class FireTower(Tower):
         self.pos = Vector(self.rect.center)
         self.target = None
         self.fired_beam = None
+
+        self.upgrade_button_1 = UpgradeButton(path.join(ui_dir, "upgrade_damage.png"), 0+21, 512+19, self, self.upgrade_attack)
+        self.upgrade_button_2 = UpgradeButton(path.join(ui_dir, "upgrade_dps.png"), 0+110, 512+19, self, self.upgrade_damage_tick_frequency)
+
 
     def update(self, dt):
         target = None
@@ -247,6 +207,65 @@ class FireTower(Tower):
             self.upgrade_cost += 100
 
 
+class SlowTower(Tower):
+    name = "Slow Tower"
+    radius = 100
+    damage = 0
+    tier = 1
+    cost = 200
+    bullet_cd = 1000
+    upgrade_cost = 50
+    bullet_speed = 1
+    speed_mod = 0.8
+    slow_duration = 3000
+
+    def __init__(self, x, y, level):
+        super(SlowTower, self).__init__(x, y, level)
+        self.image = pg.image.load(path.join(tower_dir, "tower5.png")).convert_alpha()
+        self.rect = self.image.get_rect(topleft=(x, y))
+
+        self.upgrade_button_1 = UpgradeButton(path.join(ui_dir, "upgrade_slow_duration.png"), 0+21, 512+19, self, self.upgrade_slow_duration)
+        self.upgrade_button_2 = UpgradeButton(path.join(ui_dir, "upgrade_slow_modifier.png"), 0+110, 512+19, self, self.upgrade_slow_modifier)
+
+    def update(self, dt):
+        target = None
+        shortest_distance = 100000 # "Infinite"
+
+        collision_group = pg.sprite.spritecollide(self, self.creeps, False, self.check_collision)
+        for creep in collision_group:
+                new_distance = self.pos.distance_to(creep.pos)
+                if target is None:
+                    target = creep
+                    shortest_distance = new_distance
+                else:
+                    if target.slowed:
+                        target = creep
+                        shortest_distance = new_distance
+
+
+
+        now = pg.time.get_ticks()
+        if now - self.last_bullet > self.bullet_cd and target is not None:
+            self.last_bullet = now
+            self.shoot_bullet(target)
+
+    def shoot_bullet(self, target):
+        bullet = SlowBullet(self.rect.x, self.rect.y, self.level, self.damage, self.bullet_speed, target, self.speed_mod, self.slow_duration)
+        self.level.bullet_group.add(bullet)
+
+    def upgrade_slow_modifier(self):
+        if self.tier <= self.max_tier:
+            self.speed_mod -= 0.1
+            self.tier += 1
+            self.upgrade_cost += 100
+
+    def upgrade_slow_duration(self):
+        if self.tier <= self.max_tier:
+            self.slow_duration += 200
+            self.tier += 1
+            self.upgrade_cost += 100
+
+
 class MultiTower(Tower):
     name = "Multi Tower"
     radius = 100
@@ -262,6 +281,10 @@ class MultiTower(Tower):
         self.image = pg.image.load(path.join(tower_dir, "tower6.png")).convert_alpha()
 
         self.direction_list = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]]
+
+        self.upgrade_button_1 = UpgradeButton(path.join(ui_dir, "upgrade_damage.png"), 0+21, 512+19, self, self.upgrade_attack)
+        self.upgrade_button_2 = UpgradeButton(path.join(ui_dir, "upgrade_range.png"), 0+110, 512+19, self, self.upgrade_radius)
+
 
 
     def update(self, dt):
