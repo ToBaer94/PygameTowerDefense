@@ -4,6 +4,7 @@ from os import path, pardir
 from buttons.tower_selection_button import TowerButton
 from buttons.trap_selection_button import TrapButton
 from buttons.sell_button import SellButton
+from buttons.arrow_button import ArrowButton
 import Queue
 from constants import SCREEN_HEIGHT, SCREEN_WIDTH, TILE_WIDTH, TILE_HEIGHT, UI_COLOR, WHITE, BLACK
 Vector = pg.math.Vector2
@@ -40,6 +41,9 @@ class GamePlay(GameState):
         self.active_button_list = self.button_1_list
 
         self.sell_button = SellButton(path.join(ui_dir, "sell_button.png"), 0 + 193, 512 + 19, self)
+
+        self.up_arrow_button = ArrowButton(path.join(ui_dir, "up_arrow.png"), SCREEN_WIDTH - 200, 532, self, self.set_uibar_1)
+        self.down_arrow_button = ArrowButton(path.join(ui_dir, "down_arrow.png"), SCREEN_WIDTH - 200, 555, self, self.set_uibar_2)
 
         self.selected_tower = None
         self.highlighted_tower = None
@@ -89,6 +93,7 @@ class GamePlay(GameState):
                     if tile_property["bridge"] == "True":
                         print x, y
                         self.tile_list.append([x, y])
+
 
         start = self.tile_list[0]
         end = self.tile_list[-1]
@@ -160,15 +165,24 @@ class GamePlay(GameState):
             if pressed[1]:
 
                 print "buttons switched"
-                if self.active_button_list == self.button_1_list:
-                    self.active_button_list = self.button_2_list
-                else:
-                    self.active_button_list = self.button_1_list
+                self.switch_ui()
 
             if pressed[2]:
                 self.selected_tower = None
                 self.highlighted_tower = None
                 self.selected_trap = None
+
+    def switch_ui(self):
+        if self.active_button_list == self.button_1_list:
+            self.active_button_list = self.button_2_list
+        else:
+            self.active_button_list = self.button_1_list
+
+    def set_uibar_1(self):
+        self.active_button_list = self.button_1_list
+
+    def set_uibar_2(self):
+        self.active_button_list = self.button_2_list
 
     def update(self, dt):
         if self.level.game_over:
@@ -312,6 +326,12 @@ class GamePlay(GameState):
             for button in self.active_button_list:
                 screen.blit(button.image, button.rect)
 
+            if self.active_button_list == self.button_1_list:
+                screen.blit(self.down_arrow_button.image, self.down_arrow_button.rect)
+
+            else:
+                screen.blit(self.up_arrow_button.image, self.up_arrow_button.rect)
+
         else:
             screen.blit(self.upgrade_ui, (0, 512))
             pg.draw.rect(screen, BLACK, [self.highlighted_tower.rect.x, self.highlighted_tower.rect.y,
@@ -324,7 +344,7 @@ class GamePlay(GameState):
             self.display_tower_info(screen)
 
         if self.money_ui is not None:
-            screen.blit(self.money_ui, (800-192 + 10, 512 + 40))
+            screen.blit(self.money_ui, (800-150 + 10, 512 + 40))
 
     def display_upgrade_ui(self, screen):
         if self.highlighted_tower.tier <= self.highlighted_tower.max_tier:
@@ -352,13 +372,17 @@ class GamePlay(GameState):
         self.draw_tower_preview(screen)
         self.draw_trap_preview(screen)
         self.draw_ui(screen)
-        # self.draw_debug_pathfinding(screen)
+        self.draw_debug_pathfinding(screen)
 
     def select_object(self, x, y):
         if self.highlighted_tower is None and self.selected_trap is None and self.selected_tower is None:
             for button in self.active_button_list:
                 if button.rect.collidepoint(x, y):
                     button.get_clicked()
+            if self.up_arrow_button.rect.collidepoint(x, y) and self.active_button_list == self.button_2_list:
+                self.up_arrow_button.get_clicked()
+            elif self.down_arrow_button.rect.collidepoint(x, y) and self.active_button_list == self.button_1_list:
+                self.down_arrow_button.get_clicked()
 
         if self.selected_tower is None and self.selected_trap is None:
             for tower in self.level.tower_group:
