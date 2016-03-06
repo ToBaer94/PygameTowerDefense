@@ -19,9 +19,9 @@ trap_dir = path.join(path.dirname(__file__), pardir, "assets", "traps")
 class GamePlay(GameState):
     def __init__(self):
         super(GamePlay, self).__init__()
-        self.next_state = "MENU"
+        self.next_state = "LEVEL"
 
-        self.ui = pg.image.load(path.join(ui_dir, "uitemplate.png")).convert_alpha()
+        self.ui = pg.image.load(path.join(ui_dir, "ui_template.png")).convert_alpha()
         self.upgrade_ui = pg.image.load(path.join(ui_dir, "ui_upgrade.png")).convert_alpha()
 
         self.sniper_button_ui = TowerButton(path.join(ui_dir, "tower_1_button.png"), 0 + 21, 512 + 19, self, 0)
@@ -57,7 +57,11 @@ class GamePlay(GameState):
         self.props = {}
 
     def startup(self, persistent):
-        self.level = Level()
+        self.persist = persistent
+        level_name = self.persist["current_level"][0]
+        waves = self.persist["current_level"][1]
+        money = self.persist["current_level"][2]
+        self.level = Level(level_name, waves, money)
 
         self.selected_tower = None
         self.highlighted_tower = None
@@ -140,8 +144,8 @@ class GamePlay(GameState):
         if event.type == pg.MOUSEMOTION:
 
             x, y = pg.mouse.get_pos()
-            x = x // self.level.tile_renderer.tmx_data.tilewidth
-            y = y // self.level.tile_renderer.tmx_data.tileheight
+            x = x // TILE_WIDTH
+            y = y // TILE_HEIGHT
             try:
                 self.props = self.level.tile_renderer.tmx_data.get_tile_properties(x, y, 0)
                 self.cursor_x = x
@@ -263,7 +267,7 @@ class GamePlay(GameState):
                 special_text = self.create_text("every " + str(self.level.tower_list[self.selected_tower].tick_frequency) + "ms")
                 special_rect = special_text.get_rect()
 
-            mouse_pos_x = self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth
+            mouse_pos_x = self.cursor_x * TILE_WIDTH
             if mouse_pos_x < 400:
                 pg.draw.rect(screen, UI_COLOR, [SCREEN_WIDTH - 192, 412 - 2, 192, 100])
                 screen.blit(name_text, (SCREEN_WIDTH - 192 + 10, 412 + name_rect.height))
@@ -280,8 +284,7 @@ class GamePlay(GameState):
                 if special_text:
                     screen.blit(special_text, (0 + 10, 412 + 60 + special_rect.height ))
 
-        try:
-
+        if "can_build" in self.props:
             if self.props["can_build"] == "True" and self.selected_tower is not None:
                 radius = self.level.tower_list[self.selected_tower].radius
                 tower_image = pg.image.load(path.join(tower_dir, "tower" + str(self.selected_tower + 1) + ".png"))
@@ -296,28 +299,44 @@ class GamePlay(GameState):
                 pg.draw.circle(screen, BLACK, ([self.cursor_x * TILE_WIDTH + 16,
                                                 self.cursor_y * TILE_HEIGHT + 16]), radius, 1)
                 screen.blit(tower_image, (self.cursor_x * TILE_WIDTH, self.cursor_y * TILE_HEIGHT))
-        except KeyError:
-            pass
-            # print "Key 'can_build' not in dictionary 'self.props'"
-            # print "Mouse cursor must be outside of the map area (e.g. on top of the UI)"
+
 
     def draw_trap_preview(self, screen):
-        try:
+        if self.selected_trap is not None:
+            name_text = self.create_text(str(self.level.trap_list[self.selected_trap].name))
+            name_rect = name_text.get_rect()
+            cost_text = self.create_text("Cost: " + str(self.level.trap_list[self.selected_trap].cost) + " Gold")
+            cost_rect = cost_text.get_rect()
 
-            if self.props["can_build"] == "False" and self.selected_trap is not None:
-                pg.draw.rect(self.screen, BLACK, [self.cursor_x * TILE_WIDTH,
-                                                  self.cursor_y * TILE_HEIGHT,
-                                                  TILE_WIDTH,
-                                                  TILE_HEIGHT
-                                                  ], 1
-                             )
+            damage_text = self.create_text("Damage: " + str(self.level.trap_list[self.selected_trap].damage))
+            damage_rect = damage_text.get_rect()
 
-                screen.blit(pg.image.load(path.join(trap_dir, "trap" + str(self.selected_trap + 1) + ".png")), (self.cursor_x * self.level.tile_renderer.tmx_data.tilewidth,
-                                                                                                                   self.cursor_y * self.level.tile_renderer.tmx_data.tileheight))
-        except KeyError:
-            pass
-            # print "Key 'can_build' not in dictionary 'self.props'"
-            # print "Mouse cursor must be outside of the map area (e.g. on top of the UI)"
+            mouse_pos_x = self.cursor_x * TILE_WIDTH
+            if mouse_pos_x < 400:
+                pg.draw.rect(screen, UI_COLOR, [SCREEN_WIDTH - 192, 412 - 2, 192, 100])
+                screen.blit(name_text, (SCREEN_WIDTH - 192 + 10, 412 + name_rect.height))
+                screen.blit(cost_text, (SCREEN_WIDTH - 192 + 10, 412 + 20 + cost_rect.height ))
+                screen.blit(damage_text, (SCREEN_WIDTH - 192 + 10, 412 + 40 + damage_rect.height ))
+
+            elif mouse_pos_x >= 400:
+                pg.draw.rect(screen, UI_COLOR, [0, 412 - 2, 192, 100])
+                screen.blit(name_text, (0 + 10, 412 + name_rect.height))
+                screen.blit(cost_text, (0 + 10, 412 + 20 + cost_rect.height))
+                screen.blit(damage_text, (0 + 10, 412 + 40 + damage_rect.height))
+
+            if "can_build" in self.props:
+                if self.props["can_build"] == "False" and self.selected_trap is not None:
+                    pg.draw.rect(self.screen, BLACK, [self.cursor_x * TILE_WIDTH,
+                                                      self.cursor_y * TILE_HEIGHT,
+                                                      TILE_WIDTH,
+                                                      TILE_HEIGHT
+                                                      ], 1
+                                 )
+
+
+                    screen.blit(pg.image.load(path.join(trap_dir, "trap" + str(self.selected_trap + 1) + ".png")),
+                                (self.cursor_x * TILE_WIDTH,
+                                 self.cursor_y * TILE_HEIGHT))
 
     def draw_ui(self, screen):
 
@@ -335,7 +354,7 @@ class GamePlay(GameState):
         else:
             screen.blit(self.upgrade_ui, (0, 512))
             pg.draw.rect(screen, BLACK, [self.highlighted_tower.rect.x, self.highlighted_tower.rect.y,
-                                                     self.highlighted_tower.rect.width, self.highlighted_tower.rect.height], 1)
+                                         self.highlighted_tower.rect.width, self.highlighted_tower.rect.height], 1)
 
             self.highlighted_tower.draw2(screen) # Draw circle in tower range
 
@@ -416,7 +435,8 @@ class GamePlay(GameState):
         self.highlighted_tower = None
 
     def place_trap(self, x, y):
-        try:
+
+        if "can_build" in self.props:
             if self.selected_trap is not None and self.props["can_build"] == "False":
                 allowed = True
                 for trap in self.level.trap_group:
@@ -426,16 +446,14 @@ class GamePlay(GameState):
 
                 if allowed:
                     if self.selected_trap >= 0:
-                        if self.level.money >= self.level.trap_list[self.selected_trap].cost:
-                            self.create_trap(x, y, self.selected_trap)
-                            self.level.money -= self.level.trap_list[self.selected_trap].cost
-
-        except KeyError:
-            print "Key 'can_build' not in dictionary 'self.props'"
-            print "Mouse cursor must be outside of the map area (e.g. on top of the UI)"
+                        trap = self.selected_trap
+                        cost = self.level.trap_list[self.selected_trap].cost
+                        if self.level.money >= cost:
+                            self.create_trap(x, y, trap)
+                            self.level.money -= cost
 
     def place_tower(self, x, y):
-        try:
+        if "can_build" in self.props:
             if self.selected_tower is not None and self.props["can_build"] == "True":
                 allowed = True
                 for tower in self.level.tower_group:
@@ -444,29 +462,26 @@ class GamePlay(GameState):
                         break
                 if allowed:
                     if self.selected_tower >= 0:
-                        if self.level.money >= self.level.tower_list[self.selected_tower].cost:
-                            self.create_tower(x, y, self.selected_tower)
-                            self.level.money -= self.level.tower_list[self.selected_tower].cost
-
-        # Catch the keyerror in case the self.props dict wasnt updated yet
-        except KeyError:
-            print "Key 'can_build' not in dictionary 'self.props'"
-            print "Mouse cursor must be outside of the map area (e.g. on top of the UI)"
+                        tower = self.selected_tower
+                        cost = self.level.tower_list[self.selected_tower].cost
+                        if self.level.money >= cost:
+                            self.create_tower(x, y, tower)
+                            self.level.money -= cost
 
     def create_tower(self, x, y, selected):
-        x = x // self.level.tile_renderer.tmx_data.tilewidth
-        y = y // self.level.tile_renderer.tmx_data.tileheight
+        x = x // TILE_WIDTH
+        y = y // TILE_HEIGHT
 
-        tower = self.level.tower_list[selected](x * self.level.tile_renderer.tmx_data.tilewidth,
-                                                y * self.level.tile_renderer.tmx_data.tileheight,
+        tower = self.level.tower_list[selected](x * TILE_WIDTH,
+                                                y * TILE_HEIGHT,
                                                 self.level)
         self.level.tower_group.add(tower)
 
     def create_trap(self, x, y, selected):
-        x = x // self.level.tile_renderer.tmx_data.tilewidth
-        y = y // self.level.tile_renderer.tmx_data.tileheight
-        trap = self.level.trap_list[selected](x * self.level.tile_renderer.tmx_data.tilewidth,
-                                              y * self.level.tile_renderer.tmx_data.tileheight,
+        x = x // TILE_WIDTH
+        y = y // TILE_HEIGHT
+        trap = self.level.trap_list[selected](x * TILE_WIDTH,
+                                              y * TILE_HEIGHT,
                                               self.level)
         self.level.trap_group.add(trap)
 
