@@ -2,6 +2,7 @@ import pygame as pg
 from states.gameplay_state import GamePlay
 from states.menu_state import MenuState
 from states.rules_state import RuleState
+from states.level_selection_state import LevelSelect
 from constants import SCREEN_HEIGHT, SCREEN_WIDTH
 import sys, os
 
@@ -73,7 +74,8 @@ if __name__ == "__main__":
 
     pg.display.set_caption("TD 1")
     screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT)) # , pg.RESIZABLE
-    states = {"LEVEL": GamePlay(),
+    states = {"GAME": GamePlay(),
+              "LEVEL": LevelSelect(),
               "MENU": MenuState(),
               "RULES": RuleState()}
 

@@ -128,8 +128,8 @@ class Worm(Creep):
 class Behemoth(Creep):
     total_health = 30.0
     health = 30.0
-    speed = 0.1
-    orig_speed = 0.1
+    speed = 0.3
+    orig_speed = 0.3
 
     def __init__(self, level, pathing):
         super(Behemoth, self).__init__(level, pathing)
@@ -138,8 +138,8 @@ class Behemoth(Creep):
 
     def take_damage(self, damage):
         self.health -= damage
-        self.speed += 0.05
-        self.orig_speed += 0.05
+        self.speed += 0.03
+        self.orig_speed += 0.03
 
 
 class SwiftWalker(Creep):
