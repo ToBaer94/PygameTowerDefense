@@ -1,6 +1,7 @@
 import pygame as pg
 from os import path, pardir
 import math
+from spritesheet_functions import SpriteSheet
 Vector = pg.math.Vector2
 
 bullet_dir = path.join(path.dirname(__file__), "assets", "bullets")
@@ -44,6 +45,9 @@ class Bullet(pg.sprite.Sprite):
         self.rect.x = self.pos.x
         self.rect.y = self.pos.y
 
+    def draw_debug(self, screen):
+        pg.draw.circle(screen, pg.Color("black"), self.rect.center, self.radius, 1)
+
 
 class SlowBullet(Bullet):
     def __init__(self, x, y, level, damage, speed, target, speed_modifier, duration):
@@ -77,23 +81,31 @@ class ExplosiveBullet(Bullet):
     def __init__(self, x, y, level, damage, speed, target):
         super(ExplosiveBullet, self).__init__(x, y, level, damage, speed, target)
 
+        self.explosion_animation = []
+        self.explosion_spritesheet = SpriteSheet(path.join(bullet_dir, "explo.png"))
+        self.animation_index = 0
+
+        for x in range(7):
+            image = self.explosion_spritesheet.get_image(92 + x * (4 + 30), 9, 30, 30, 96, 96)
+            self.explosion_animation.append(image)
+
         self.exploded = False
-        self.exp_radius = 32
-        self.exp_image = pg.image.load(path.join(bullet_dir, "bullet_explo.png")).convert_alpha()
-        self.explosion_time = None
+        self.exp_radius = 48
+        self.animation_timer = None
+        self.animation_speed = 50
 
     def update(self, dt):
         if not self.exploded:
             if self.target.rect.collidepoint(self.rect.center):
                 self.vel = Vector(0, 0)
                 self.exploded = True
-                self.image = self.exp_image
+                self.image = self.explosion_animation[self.animation_index]
                 self.rect = self.image.get_rect()
                 self.pos = Vector(self.target.rect.center)
 
                 self.rect.center = self.pos
                 self.radius = self.exp_radius
-                self.explosion_time = pg.time.get_ticks()
+                self.animation_timer = pg.time.get_ticks()
 
             if self.exploded:
                 collision_group = pg.sprite.spritecollide(self, self.creeps, False, self.check_collision)
@@ -116,20 +128,23 @@ class ExplosiveBullet(Bullet):
 
         else:
             now = pg.time.get_ticks()
-            if now - self.explosion_time > 500:
-                self.kill()
+            if now - self.animation_timer > self.animation_speed:
+                self.animation_timer = now
+                if self.animation_index < len(self.explosion_animation) - 1:
+                    self.animation_index += 1
+                    self.image = self.explosion_animation[self.animation_index]
+                else:
+                    self.kill()
 
     def check_collision(self, bullet, other):
         bullet_vector_pos = Vector(bullet.rect.center)
         other_vector_pos = Vector(other.rect.center)
         distance = bullet_vector_pos.distance_to(other_vector_pos)
-        print bullet.radius + other.radius, distance
         if bullet.radius + other.radius > distance:
             return True
         return False
 
-    def draw2(self, screen):
-        pg.draw.circle(screen, pg.Color("black"), self.rect.center, self.radius, 1)
+
 
 
 class Beam(Bullet):

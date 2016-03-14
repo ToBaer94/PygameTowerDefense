@@ -98,11 +98,14 @@ class Level(object):
         self.trap_group.draw(screen)
         self.creep_group.draw(screen)
         self.bullet_group.draw(screen)
+
+        #for bullet in self.bullet_group:
+        #    bullet.draw_debug(screen)
         self.beam_group.draw(screen)
 
         for creep in self.creep_group:
             creep.draw_ui(screen)
-            # creep.draw_debug(screen)
+            creep.draw_debug(screen)
 
         #self.debug_beam(screen)
 
