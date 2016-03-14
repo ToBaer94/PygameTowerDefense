@@ -21,6 +21,8 @@ class MenuState(GameState):
         self.tutorial_button = RulesButton(200, 250, self)
         self.exit_button = ExitButton(200, 400, self)
 
+        self.background_image = pg.image.load(path.join(ui_dir, "background.png")).convert_alpha()
+
         self.button_list = []
         self.button_list.append(self.start_button)
         self.button_list.append(self.tutorial_button)
@@ -37,7 +39,7 @@ class MenuState(GameState):
                     button.get_clicked()
 
     def draw(self, screen):
-        screen.fill(pg.Color("white"))
+        screen.blit(self.background_image, (0, 0))
 
         for button in self.button_list:
             screen.blit(button.image, (button.rect.x, button.rect.y))

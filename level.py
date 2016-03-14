@@ -65,7 +65,7 @@ class Level(object):
                 break
         if can_spawn:
             now = pg.time.get_ticks()
-            if now - self.last_spawn > 1000:
+            if now - self.last_spawn > 1500:
                 self.last_spawn = now
                 for lane, wave in enumerate(self.current_wave):
                     try:

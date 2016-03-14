@@ -141,6 +141,10 @@ class GamePlay(GameState):
         if event.type == pg.QUIT:
             self.quit = True
 
+        elif event.type == pg.KEYDOWN:
+            if event.key == pg.K_ESCAPE:
+                self.done = True
+
         if event.type == pg.MOUSEMOTION:
 
             x, y = pg.mouse.get_pos()
@@ -391,7 +395,7 @@ class GamePlay(GameState):
         self.draw_tower_preview(screen)
         self.draw_trap_preview(screen)
         self.draw_ui(screen)
-        self.draw_debug_pathfinding(screen)
+        # self.draw_debug_pathfinding(screen)
 
     def select_object(self, x, y):
         if self.highlighted_tower is None and self.selected_trap is None and self.selected_tower is None:
