@@ -1,8 +1,9 @@
 import pygame as pg
 from base_state import GameState
 from buttons.level_select_button import LevelButton
+from levels import Level01, Level02, Level03
 from os import pardir, path
-from constants import WHITE
+
 
 level_dir = path.join(path.dirname(__file__), pardir, "assets", "levels")
 ui_dir = path.join(path.dirname(__file__), pardir, "assets", "ui")
@@ -14,27 +15,11 @@ class LevelSelect(GameState):
 
         self.background_image = pg.image.load(path.join(ui_dir, "background.png")).convert_alpha()
 
-
-        self.level_list = [level_dir + "\map.tmx", level_dir + "\map2.tmx"]
-        self.wave_list = [[ [[0, 0], [1, 1, 1, 1, 1, 1, 1], [2] ],
-                          [ [1, 1], [2, 2], [2, 2] ],
-                          [ [1, 1], [2, 2], [2, 2] ],
-                          [ [1, 1], [2, 2], [2, 2] ],
-                          [ [1, 1], [2, 2], [2, 2] ]
-                          ],
-                          [ [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 1]], [[1, 2], [2, 2]] ]
-                         ]
-
-        self.money_list = [1000, 2000]
-
-        self.level_1_button = LevelButton(ui_dir + "\level_1_button.png", 50, 50, self, self.level_list[0], self.wave_list[1], self.money_list[0])
-        self.level_2_button = LevelButton(ui_dir + "\level_2_button.png", 50, 150, self, self.level_list[1], self.wave_list[0], self.money_list[1])
-        self.level_3_button = LevelButton(ui_dir + "\level_3_button.png", 50, 250, self, self.level_list[1], self.wave_list[0], self.money_list[1])
-        self.level_4_button = LevelButton(ui_dir + "\level_4_button.png", 50, 350, self, self.level_list[1], self.wave_list[0], self.money_list[1])
-        self.level_5_button = LevelButton(ui_dir + "\level_5_button.png", 50, 450, self, self.level_list[1], self.wave_list[0], self.money_list[1])
-
-
-
+        self.level_1_button = LevelButton(ui_dir + "\level_1_button.png", 50, 50, self, Level01)
+        self.level_2_button = LevelButton(ui_dir + "\level_2_button.png", 50, 150, self, Level01)
+        self.level_3_button = LevelButton(ui_dir + "\level_3_button.png", 50, 250, self, Level01)
+        self.level_4_button = LevelButton(ui_dir + "\level_4_button.png", 50, 350, self, Level02)
+        self.level_5_button = LevelButton(ui_dir + "\level_5_button.png", 50, 450, self, Level03)
 
         self.next_state = "GAME"
 

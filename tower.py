@@ -76,7 +76,7 @@ class Tower(pg.sprite.Sprite):
         return False
 
 
-class Tower2(Tower):
+class CannonTower(Tower):
     name = "Cannon Tower"
     radius = 75
     damage = 2
@@ -87,7 +87,7 @@ class Tower2(Tower):
     bullet_speed = 1
 
     def __init__(self, x, y, level):
-        super(Tower2, self).__init__(x, y, level)
+        super(CannonTower, self).__init__(x, y, level)
         self.image = pg.image.load(path.join(tower_dir, "tower2.png")).convert_alpha()
         self.rect = self.image.get_rect(topleft = (x, y))
 

@@ -1,6 +1,6 @@
 import pygame as pg
 import tilerenderer
-from tower import Tower, Tower2, ExplosiveTower, FireTower, SlowTower, MultiTower
+from tower import Tower, CannonTower, ExplosiveTower, FireTower, SlowTower, MultiTower
 from trap import Mine
 from creep import Creep, Worm, Behemoth, SwiftWalker
 from os import path, pardir
@@ -16,9 +16,16 @@ WORM = 1
 BEHEMOTH = 2
 SWIFTWALKER = 3
 
+Towers = {"0": Tower,
+          "1": CannonTower,
+          "2": ExplosiveTower,
+          "3": FireTower,
+          "4": SlowTower,
+          "5": MultiTower}
+
 
 class Level(object):
-    def __init__(self, level_name, waves, money):
+    def __init__(self, level_name, waves, money, towers):
         self.tmx_file = path.join(level_name)
         self.tile_renderer = tilerenderer.Renderer(self.tmx_file)
         self.map_surface = self.tile_renderer.make_map()
@@ -30,7 +37,9 @@ class Level(object):
         self.bullet_group = pg.sprite.Group()
         self.beam_group = pg.sprite.Group()
 
-        self.tower_list = [Tower, Tower2, ExplosiveTower, FireTower, SlowTower, MultiTower]
+        self.tower_list = []
+        for tower in towers:
+            self.tower_list.append(Towers[str(tower)])
         self.trap_list = [Mine]
         """
         self.start_pos = None

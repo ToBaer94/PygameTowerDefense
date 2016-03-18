@@ -1,15 +1,17 @@
 import pygame as pg
-from base_state import GameState
+import Queue
 from os import path, pardir
+from base_state import GameState
+
 from buttons.tower_selection_button import TowerButton
 from buttons.trap_selection_button import TrapButton
 from buttons.sell_button import SellButton
 from buttons.arrow_button import ArrowButton
-import Queue
-from constants import SCREEN_HEIGHT, SCREEN_WIDTH, TILE_WIDTH, TILE_HEIGHT, UI_COLOR, WHITE, BLACK
-Vector = pg.math.Vector2
 
+from constants import SCREEN_HEIGHT, SCREEN_WIDTH, TILE_WIDTH, TILE_HEIGHT, UI_COLOR, WHITE, BLACK
 from level import Level
+
+Vector = pg.math.Vector2
 
 ui_dir = path.join(path.dirname(__file__), pardir, "assets", "ui")
 tower_dir = path.join(path.dirname(__file__), pardir, "assets", "towers")
@@ -21,7 +23,7 @@ class GamePlay(GameState):
         super(GamePlay, self).__init__()
         self.next_state = "LEVEL"
 
-        self.ui = pg.image.load(path.join(ui_dir, "ui_template.png")).convert_alpha()
+        self.ui = pg.image.load(path.join(ui_dir, "ui_full_template.png")).convert_alpha()
         self.upgrade_ui = pg.image.load(path.join(ui_dir, "ui_upgrade.png")).convert_alpha()
 
         self.sniper_button_ui = TowerButton(path.join(ui_dir, "tower_1_button.png"), 0 + 21, 512 + 19, self, 0)
@@ -31,12 +33,20 @@ class GamePlay(GameState):
         self.slow_button_ui = TowerButton(path.join(ui_dir, "tower_5_button.png"), 0 + 363, 512 + 19, self, 4)
         self.multi_button_ui = TowerButton(path.join(ui_dir, "tower_6_button.png"), 0 + 440, 512 + 19, self, 5)
 
+        self.tower_buttons = {"0": self.sniper_button_ui,
+                              "1": self.cannon_button_ui,
+                              "2": self.explosive_button_ui,
+                              "3": self.fire_button_ui,
+                              "4": self.slow_button_ui,
+                              "5": self.multi_button_ui
+                              }
+
         self.mine_button_ui = TrapButton(path.join(ui_dir, "trap_1_button.png"), 0 + 525, 512 + 19, self, 0)
 
-        self.button_1_list = [self.sniper_button_ui, self.cannon_button_ui, self.explosive_button_ui, self.fire_button_ui,
-                              self.slow_button_ui, self.multi_button_ui, self.mine_button_ui]
+        self.trap_buttons = {"0": self.mine_button_ui}
 
-        self.button_2_list = [self.sniper_button_ui, self.cannon_button_ui, self.explosive_button_ui]
+        self.button_1_list = []
+        self.button_2_list = [self.mine_button_ui]
 
         self.active_button_list = self.button_1_list
 
@@ -47,7 +57,6 @@ class GamePlay(GameState):
 
         self.selected_tower = None
         self.highlighted_tower = None
-
         self.selected_trap = None
 
         self.tower_info = []
@@ -58,10 +67,18 @@ class GamePlay(GameState):
 
     def startup(self, persistent):
         self.persist = persistent
-        level_name = self.persist["current_level"][0]
-        waves = self.persist["current_level"][1]
-        money = self.persist["current_level"][2]
-        self.level = Level(level_name, waves, money)
+        level_name = self.persist["current_level"].level
+        waves = self.persist["current_level"].wave_list
+        money = self.persist["current_level"].money
+        towers = self.persist["current_level"].towers
+        self.level = Level(level_name, waves, money, towers)
+
+        for tower in towers:
+            self.button_1_list.append(self.tower_buttons[str(tower)])
+
+        for index, button in enumerate(self.button_1_list):
+            button.rect.x = (21 + index * (button.rect.width + 4))
+
 
         self.selected_tower = None
         self.highlighted_tower = None
@@ -343,7 +360,6 @@ class GamePlay(GameState):
                                  self.cursor_y * TILE_HEIGHT))
 
     def draw_ui(self, screen):
-
         if self.highlighted_tower is None:
             screen.blit(self.ui, (0, 512))
             for button in self.active_button_list:
