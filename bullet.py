@@ -109,7 +109,7 @@ class ExplosiveBullet(Bullet):
 
             if self.exploded:
                 collision_group = pg.sprite.spritecollide(self, self.creeps, False, self.check_collision)
-                print collision_group
+                # print collision_group
                 for creep in collision_group:
                     creep.take_damage(self.damage)
 
@@ -145,15 +145,13 @@ class ExplosiveBullet(Bullet):
         return False
 
 
-
-
 class Beam(Bullet):
     def __init__(self, x, y, level, damage, speed, target, pos_list, vector, atk_radius, tick_frequency):
 
         super(Beam, self).__init__(x, y, level, damage, speed, target)
         self.orig_image = pg.image.load(path.join(bullet_dir, "fireball.png")).convert_alpha()
         self.image = self.orig_image.copy()
-        self.rect = self.image.get_rect(midbottom = (x, y))
+        self.rect = self.image.get_rect(midbottom=(x, y))
         self.positions = pos_list
         self.circle_list = []
         self.vector = vector
@@ -242,6 +240,37 @@ class AimlessBullet(Bullet):
         self.moved_pixels += abs(self.direction.x * self.speed * dt) + abs(self.direction.y * self.speed * dt)
         if self.moved_pixels >= self.bullet_range:
             self.kill()
+
+
+class Laser(Bullet):
+    duration = 200.0 #ms
+
+    def __init__(self, x, y, level, damage, speed, creeps, direction_rect):
+        super(Laser, self).__init__(x, y, level, damage, speed, creeps)
+        self.rect = direction_rect
+        self.creeps = creeps
+
+        self.image = pg.Surface((self.rect.width, self.rect.height))
+        self.image.fill(pg.Color("blue"))
+
+        self.has_hit = False
+        self.timer = pg.time.get_ticks()
+
+    def update(self, dt):
+        if not self.has_hit:
+            hit_list = pg.sprite.spritecollide(self, self.creeps, False)
+            for creep in hit_list:
+                creep.take_damage(self.damage)
+            self.has_hit = True
+
+        now = pg.time.get_ticks()
+        if now - self.timer > self.duration:
+            self.kill()
+
+
+
+
+
 
 
 class Rotator(object):

@@ -4,7 +4,7 @@ from states.menu_state import MenuState
 from states.rules_state import RuleState
 from states.level_selection_state import LevelSelect
 from constants import SCREEN_HEIGHT, SCREEN_WIDTH
-import sys, os
+import sys
 
 
 class Game(object):

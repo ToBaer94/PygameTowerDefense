@@ -12,7 +12,7 @@ class Level01(object):
 
     wave_list = [wave_1, wave_2, wave_3]
 
-    towers = [0, 1, 2]
+    towers = [0, 1, 2, 3, 4, 5, 6]
 
     money = 1000
 

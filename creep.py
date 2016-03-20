@@ -44,7 +44,6 @@ class Creep(pg.sprite.Sprite):
         self.slow_timer = 0
         self.slow_duration = 1000
 
-
     def set_movement(self):
         target_vector = Vector(self.pathing[self.start_index][0] - self.pathing[self.start_index-1][0], self.pathing[self.start_index][1] - self.pathing[self.start_index-1][1]) #self.pathing[self.start_index][1])
 
@@ -54,7 +53,6 @@ class Creep(pg.sprite.Sprite):
             self.start_index += 1
             self.moved_pixels = 0
         return target_vector
-
 
     def update(self, dt):
         self.set_ui()

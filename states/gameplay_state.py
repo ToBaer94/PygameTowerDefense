@@ -32,13 +32,15 @@ class GamePlay(GameState):
         self.fire_button_ui = TowerButton(path.join(ui_dir, "tower_4_button.png"), 0 + 280, 512 + 19, self, 3)
         self.slow_button_ui = TowerButton(path.join(ui_dir, "tower_5_button.png"), 0 + 363, 512 + 19, self, 4)
         self.multi_button_ui = TowerButton(path.join(ui_dir, "tower_6_button.png"), 0 + 440, 512 + 19, self, 5)
+        self.laser_button_ui = TowerButton(path.join(ui_dir, "tower_7_button.png"), 0 + 440, 512 + 19, self, 6)
 
         self.tower_buttons = {"0": self.sniper_button_ui,
                               "1": self.cannon_button_ui,
                               "2": self.explosive_button_ui,
                               "3": self.fire_button_ui,
                               "4": self.slow_button_ui,
-                              "5": self.multi_button_ui
+                              "5": self.multi_button_ui,
+                              "6": self.laser_button_ui
                               }
 
         self.mine_button_ui = TrapButton(path.join(ui_dir, "trap_1_button.png"), 0 + 525, 512 + 19, self, 0)
@@ -71,14 +73,13 @@ class GamePlay(GameState):
         waves = self.persist["current_level"].wave_list
         money = self.persist["current_level"].money
         towers = self.persist["current_level"].towers
-        self.level = Level(level_name, waves, money, towers)
+        self.level = Level(level_name, waves, money)
 
         for tower in towers:
             self.button_1_list.append(self.tower_buttons[str(tower)])
 
         for index, button in enumerate(self.button_1_list):
             button.rect.x = (21 + index * (button.rect.width + 4))
-
 
         self.selected_tower = None
         self.highlighted_tower = None
@@ -114,7 +115,6 @@ class GamePlay(GameState):
                     if tile_property["bridge"] == "True":
                         print x, y
                         self.tile_list.append([x, y])
-
 
         start = self.tile_list[0]
         end = self.tile_list[-1]
@@ -271,21 +271,21 @@ class GamePlay(GameState):
     def draw_tower_preview(self, screen):
         if self.selected_tower is not None:
 
-            name_text = self.create_text(str(self.level.tower_list[self.selected_tower].name))
+            name_text = self.create_text(str(self.level.all_towers[self.selected_tower].name))
             name_rect = name_text.get_rect()
-            cost_text = self.create_text("Cost: " + str(self.level.tower_list[self.selected_tower].cost) + " Gold")
+            cost_text = self.create_text("Cost: " + str(self.level.all_towers[self.selected_tower].cost) + " Gold")
             cost_rect = cost_text.get_rect()
 
-            damage_text = self.create_text("Damage: " + str(self.level.tower_list[self.selected_tower].damage))
+            damage_text = self.create_text("Damage: " + str(self.level.all_towers[self.selected_tower].damage))
             damage_rect = damage_text.get_rect()
 
             special_text = None
-            if self.level.tower_list[self.selected_tower].__name__ == "SlowTower":
-                special_text = self.create_text("Slow modifier: " + str(self.level.tower_list[self.selected_tower].speed_mod * 100) + "%")
+            if self.level.all_towers[self.selected_tower].__name__ == "SlowTower":
+                special_text = self.create_text("Slow modifier: " + str(self.level.all_towers[self.selected_tower].speed_mod * 100) + "%")
                 special_rect = special_text.get_rect()
 
-            if self.level.tower_list[self.selected_tower].__name__ == "FireTower":
-                special_text = self.create_text("every " + str(self.level.tower_list[self.selected_tower].tick_frequency) + "ms")
+            if self.level.all_towers[self.selected_tower].__name__ == "FireTower":
+                special_text = self.create_text("every " + str(self.level.all_towers[self.selected_tower].tick_frequency) + "ms")
                 special_rect = special_text.get_rect()
 
             mouse_pos_x = self.cursor_x * TILE_WIDTH
@@ -307,7 +307,7 @@ class GamePlay(GameState):
 
         if "can_build" in self.props:
             if self.props["can_build"] == "True" and self.selected_tower is not None:
-                radius = self.level.tower_list[self.selected_tower].radius
+                radius = self.level.all_towers[self.selected_tower].radius
                 tower_image = pg.image.load(path.join(tower_dir, "tower" + str(self.selected_tower + 1) + ".png"))
 
                 pg.draw.rect(self.screen, BLACK, [self.cursor_x * TILE_WIDTH,
@@ -320,7 +320,6 @@ class GamePlay(GameState):
                 pg.draw.circle(screen, BLACK, ([self.cursor_x * TILE_WIDTH + 16,
                                                 self.cursor_y * TILE_HEIGHT + 16]), radius, 1)
                 screen.blit(tower_image, (self.cursor_x * TILE_WIDTH, self.cursor_y * TILE_HEIGHT))
-
 
     def draw_trap_preview(self, screen):
         if self.selected_trap is not None:
@@ -376,7 +375,7 @@ class GamePlay(GameState):
             pg.draw.rect(screen, BLACK, [self.highlighted_tower.rect.x, self.highlighted_tower.rect.y,
                                          self.highlighted_tower.rect.width, self.highlighted_tower.rect.height], 1)
 
-            self.highlighted_tower.draw2(screen) # Draw circle in tower range
+            self.highlighted_tower.draw_attack_range(screen) # Draw circle in tower range
 
             self.display_upgrade_ui(screen)
             self.create_tower_info()
@@ -483,7 +482,7 @@ class GamePlay(GameState):
                 if allowed:
                     if self.selected_tower >= 0:
                         tower = self.selected_tower
-                        cost = self.level.tower_list[self.selected_tower].cost
+                        cost = self.level.all_towers[self.selected_tower].cost
                         if self.level.money >= cost:
                             self.create_tower(x, y, tower)
                             self.level.money -= cost
@@ -492,7 +491,7 @@ class GamePlay(GameState):
         x = x // TILE_WIDTH
         y = y // TILE_HEIGHT
 
-        tower = self.level.tower_list[selected](x * TILE_WIDTH,
+        tower = self.level.all_towers[selected](x * TILE_WIDTH,
                                                 y * TILE_HEIGHT,
                                                 self.level)
         self.level.tower_group.add(tower)
