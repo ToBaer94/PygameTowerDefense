@@ -114,6 +114,8 @@ class GamePlay(GameState):
         for node in node_list:
             self.create_pathfinding(node)
 
+        print self.persist
+
     def create_pathfinding(self, node_name):
         self.tile_list = []
 

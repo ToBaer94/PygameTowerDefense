@@ -26,6 +26,7 @@ class LevelSelect(GameState):
     def startup(self, persistent):
         self.next_state = "GAME"
 
+
     def get_event(self, event):
         if event.type == pg.QUIT:
             self.quit = True

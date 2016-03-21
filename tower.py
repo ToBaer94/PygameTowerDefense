@@ -83,8 +83,8 @@ class CannonTower(Tower):
     damage = 2
     tier = 1
     cost = 200
-    bullet_cd = 2500
-    upgrade_cost = 70
+    bullet_cd = 2000
+    upgrade_cost = 20
     bullet_speed = 1
 
     def __init__(self, x, y, level):
@@ -99,11 +99,11 @@ class CannonTower(Tower):
 class ExplosiveTower(Tower):
     name = "Explosive Tower"
     radius = 75
-    damage = 0.5
+    damage = 1.5
     tier = 1
     cost = 200
     bullet_cd = 1500
-    upgrade_cost = 100
+    upgrade_cost = 120
     speed = 1
 
     def __init__(self, x, y, level):
@@ -123,14 +123,14 @@ class ExplosiveTower(Tower):
 class FireTower(Tower):
     name = "Fire Tower"
     radius = 100
-    damage = 0.5
+    damage = 1.5
     tier = 1
-    cost = 200
+    cost = 550
     bullet_cd = 1500
-    upgrade_cost = 100
+    upgrade_cost = 150
     bullet_speed = 1
     attack_radius = [5, 10, 15, 20, 25]
-    tick_frequency = 1200
+    tick_frequency = 1000
 
     def __init__(self, x, y, level):
         super(FireTower, self).__init__(x, y, level)
@@ -213,7 +213,7 @@ class SlowTower(Tower):
     radius = 100
     damage = 0
     tier = 1
-    cost = 200
+    cost = 250
     bullet_cd = 1000
     upgrade_cost = 50
     bullet_speed = 1
@@ -299,10 +299,10 @@ class LaserTower(Tower):
     name = "Laser Tower"
     radius = 100
     range = 96
-    damage = 2
+    damage = 1
     tier = 1
-    cost = 100
-    upgrade_cost = 70
+    cost = 650
+    upgrade_cost = 200
     bullet_cd = 1000
     bullet_speed = 2
     max_tier = 5

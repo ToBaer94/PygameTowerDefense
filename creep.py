@@ -8,13 +8,12 @@ Vector = pg.math.Vector2
 creep_dir = path.join(path.dirname(__file__), "assets", "creeps")
 
 
-
-
 class Creep(pg.sprite.Sprite):
     total_health = 15.0
     health = 15.0
     speed = 0.5
     orig_speed = 0.5
+    gold = 15
 
     def __init__(self, level, pathing):
         super(Creep, self).__init__()
@@ -49,7 +48,7 @@ class Creep(pg.sprite.Sprite):
 
         target_vector = target_vector.normalize()
 
-        if self.moved_pixels > 32:
+        if self.moved_pixels >= 32:
             self.start_index += 1
             self.moved_pixels = 0
         return target_vector
@@ -59,7 +58,7 @@ class Creep(pg.sprite.Sprite):
 
         if self.health <= 0:
             self.dead = True
-            self.level.money += 20
+            self.level.money += self.gold
             self.kill()
 
         if self.rect.collidepoint(self.end):
@@ -117,6 +116,8 @@ class Worm(Creep):
     health = 10.0
     speed = 0.8
     orig_speed = 0.8
+
+    gold = 20
     def __init__(self, level, pathing):
         super(Worm, self).__init__(level, pathing)
 
@@ -128,6 +129,8 @@ class Behemoth(Creep):
     health = 30.0
     speed = 0.3
     orig_speed = 0.3
+
+    gold = 30
 
     def __init__(self, level, pathing):
         super(Behemoth, self).__init__(level, pathing)
@@ -145,6 +148,8 @@ class SwiftWalker(Creep):
     health = 20.0
     speed = 0.4
     orig_speed = 0.4
+
+    gold = 30
 
     def __init__(self, level, pathing):
         super(SwiftWalker, self).__init__(level, pathing)
