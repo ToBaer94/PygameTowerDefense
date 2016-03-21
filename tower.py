@@ -315,8 +315,11 @@ class LaserTower(Tower):
         self.collision_rects = []
         self.laser_rects = []
 
+        self.offset = 5
+
         self.create_collision_rects()
         self.create_laser_rects()
+
 
     def update(self, dt):
         target = None
@@ -347,12 +350,11 @@ class LaserTower(Tower):
         for rect in self.collision_rects:
             pg.draw.rect(screen, BLACK, rect, 1)
 
-
     def create_laser_rects(self):
-        north_rect = pg.Rect(self.rect.x, 0, self.rect.width, self.rect.y)
-        west_rect = pg.Rect(0, self.rect.y, self.rect.x, self.rect.height)
-        south_rect = pg.Rect(self.rect.x, self.rect.y + self.rect.height, self.rect.width, SCREEN_HEIGHT - self.rect.y)
-        east_rect = pg.Rect(self.rect.x + self.rect.width, self.rect.y, SCREEN_WIDTH - self.rect.x, self.rect.height)
+        north_rect = pg.Rect(self.rect.x + self.offset, 0, self.rect.width - 2 * self.offset, self.rect.y)
+        west_rect = pg.Rect(0, self.rect.y + self.offset, self.rect.x, self.rect.height - 2 * self.offset)
+        south_rect = pg.Rect(self.rect.x + self.offset, self.rect.y + self.rect.height, self.rect.width - 2 * self.offset, SCREEN_HEIGHT - self.rect.y)
+        east_rect = pg.Rect(self.rect.x + self.rect.width, self.rect.y + self.offset, SCREEN_WIDTH - self.rect.x, self.rect.height - 2 * self.offset)
         self.laser_rects = [north_rect, west_rect, south_rect, east_rect]
 
     def create_collision_rects(self):

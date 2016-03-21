@@ -13,6 +13,7 @@ class Level01(object):
     wave_list = [wave_1, wave_2, wave_3]
 
     towers = [0, 1, 2, 3, 4, 5, 6]
+    traps = [0]
 
     money = 1000
 
@@ -26,6 +27,7 @@ class Level02(object):
     wave_list = [wave_1, wave_2]
 
     towers = [0, 1, 2, 3, 4]
+    traps = [0]
 
     money = 1600
 
@@ -39,6 +41,7 @@ class Level03(object):
     wave_list = [wave_1, wave_2]
 
     towers = [0, 1, 2, 3, 4, 5]
+    traps = []
 
     money = 2400
 

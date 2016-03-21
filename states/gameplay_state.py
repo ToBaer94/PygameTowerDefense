@@ -48,7 +48,7 @@ class GamePlay(GameState):
         self.trap_buttons = {"0": self.mine_button_ui}
 
         self.button_1_list = []
-        self.button_2_list = [self.mine_button_ui]
+        self.button_2_list = []
 
         self.active_button_list = self.button_1_list
 
@@ -73,12 +73,26 @@ class GamePlay(GameState):
         waves = self.persist["current_level"].wave_list
         money = self.persist["current_level"].money
         towers = self.persist["current_level"].towers
+        traps = self.persist["current_level"].traps
+
         self.level = Level(level_name, waves, money)
 
-        for tower in towers:
-            self.button_1_list.append(self.tower_buttons[str(tower)])
+        for index, tower in enumerate(towers):
+            if index <= 6:
+                self.button_1_list.append(self.tower_buttons[str(tower)])
+            elif index > 6:
+                self.button_2_list.append(self.tower_buttons[str(tower)])
+
+        for index, trap in enumerate(traps):
+            if len(self.button_1_list) <= 6:
+                self.button_1_list.append(self.trap_buttons[str(trap)])
+            else:
+                self.button_2_list.append(self.trap_buttons[str(trap)])
 
         for index, button in enumerate(self.button_1_list):
+            button.rect.x = (21 + index * (button.rect.width + 4))
+
+        for index, button in enumerate(self.button_2_list):
             button.rect.x = (21 + index * (button.rect.width + 4))
 
         self.selected_tower = None

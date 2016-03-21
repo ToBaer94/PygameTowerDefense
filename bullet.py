@@ -243,7 +243,7 @@ class AimlessBullet(Bullet):
 
 
 class Laser(Bullet):
-    duration = 200.0 #ms
+    duration = 700.0  # ms
 
     def __init__(self, x, y, level, damage, speed, creeps, direction_rect):
         super(Laser, self).__init__(x, y, level, damage, speed, creeps)
@@ -266,11 +266,6 @@ class Laser(Bullet):
         now = pg.time.get_ticks()
         if now - self.timer > self.duration:
             self.kill()
-
-
-
-
-
 
 
 class Rotator(object):
