@@ -33,6 +33,7 @@ class GamePlay(GameState):
         self.slow_button_ui = TowerButton(path.join(ui_dir, "tower_5_button.png"), 0 + 363, 512 + 19, self, 4)
         self.multi_button_ui = TowerButton(path.join(ui_dir, "tower_6_button.png"), 0 + 440, 512 + 19, self, 5)
         self.laser_button_ui = TowerButton(path.join(ui_dir, "tower_7_button.png"), 0 + 440, 512 + 19, self, 6)
+        self.crescent_button_ui = TowerButton(path.join(ui_dir, "tower_8_button.png"), 0 + 440, 512 + 19, self, 7)
 
         self.tower_buttons = {"0": self.sniper_button_ui,
                               "1": self.cannon_button_ui,
@@ -40,7 +41,8 @@ class GamePlay(GameState):
                               "3": self.fire_button_ui,
                               "4": self.slow_button_ui,
                               "5": self.multi_button_ui,
-                              "6": self.laser_button_ui
+                              "6": self.laser_button_ui,
+                              "7": self.crescent_button_ui
                               }
 
         self.mine_button_ui = TrapButton(path.join(ui_dir, "trap_1_button.png"), 0 + 525, 512 + 19, self, 0)

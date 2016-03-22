@@ -2,6 +2,7 @@ import pygame as pg
 from os import path, pardir
 import math
 from spritesheet_functions import SpriteSheet
+from constants import SCREEN_HEIGHT, SCREEN_WIDTH
 Vector = pg.math.Vector2
 
 bullet_dir = path.join(path.dirname(__file__), "assets", "bullets")
@@ -266,6 +267,69 @@ class Laser(Bullet):
         now = pg.time.get_ticks()
         if now - self.timer > self.duration:
             self.kill()
+
+
+class Crescent(Bullet):
+    def __init__(self, x, y, level, damage, speed, target):
+        super(Crescent, self).__init__(x, y, level, damage, speed, target)
+
+        self.orig_image = pg.image.load(path.join(bullet_dir, "crescent.png")).convert_alpha()
+
+        self.image = self.orig_image.copy()
+        self.rect = self.image.get_rect(center=(x, y))
+
+        self.pos = Vector(x, y)
+
+        self.direction = Vector(0, 0)
+        self.comparison_vector = Vector(-1, 0)
+        self.set_target()
+
+        self.set_origin(self.rect.center)
+        self.rotate_sprite()
+
+        self.hit_list = []
+
+    def update(self, dt):
+
+        self.pos.x += self.direction.x * self.speed * dt
+        self.pos.y += self.direction.y * self.speed * dt
+        self.rect.x = self.pos.x
+        self.rect.y = self.pos.y
+
+        for creep in self.level.creep_group:
+            if self.rect.colliderect(creep.rect):
+                if creep not in self.hit_list:
+                    creep.take_damage(self.damage)
+                    self.hit_list.append(creep)
+
+        if self.rect.x < 0 - self.rect.width or self.rect.x > SCREEN_WIDTH + self.rect.width:
+            self.kill()
+        if self.rect.y < 0 - self.rect.height or self.rect.y > SCREEN_HEIGHT + self.rect.height:
+            self.kill()
+
+    def set_target(self):
+        x_diff = self.target.pos.x - self.pos.x
+        y_diff = self.target.pos.y - self.pos.y
+        # print x_diff, y_diff
+        self.direction = Vector(x_diff, y_diff).normalize()
+
+    def set_origin(self, point):
+        self.origin = list(point)
+        self.rotator = Rotator(self.rect.center, self.origin, 0)
+
+    def rotate_sprite(self):
+        new_angle = self.direction.angle_to(self.comparison_vector)
+        new_center = self.rotator(new_angle, self.origin)
+        self.image = pg.transform.rotate(self.orig_image, new_angle)
+        self.rect = self.image.get_rect(center=new_center)
+        self.pos = Vector(self.rect.x, self.rect.y)
+
+    def draw_debug(self, screen):
+        pg.draw.rect(screen, pg.Color("black"), self.rect)
+
+
+
+
 
 
 class Rotator(object):

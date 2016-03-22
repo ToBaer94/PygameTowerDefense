@@ -1,6 +1,6 @@
 import pygame as pg
 from os import path, pardir
-from bullet import Bullet, ExplosiveBullet, Beam, SlowBullet, AimlessBullet, Laser
+from bullet import Bullet, ExplosiveBullet, Beam, SlowBullet, AimlessBullet, Laser, Crescent
 from buttons.upgrade_button import UpgradeButton
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, BLACK
 Vector = pg.math.Vector2
@@ -372,6 +372,27 @@ class LaserTower(Tower):
             self.tier += 1
             self.upgrade_cost += 100
             self.create_collision_rects()
+
+
+class CrescentTower(Tower):
+    name = "Crescent Tower"
+    radius = 70
+    damage = 1
+    tier = 1
+    cost = 450
+    upgrade_cost = 160
+    bullet_cd = 1500
+    bullet_speed = 3.5
+    max_tier = 5
+
+    def __init__(self, x, y, level):
+        super(CrescentTower, self).__init__(x, y, level)
+        self.image = pg.image.load(path.join(tower_dir, "tower8.png")).convert_alpha()
+
+    def shoot_bullet(self, target):
+        bullet = Crescent(self.rect.x, self.rect.y, self.level, self.damage, self.bullet_speed, target)
+        self.level.bullet_group.add(bullet)
+
 
 
 

@@ -1,6 +1,6 @@
 import pygame as pg
 import tilerenderer
-from tower import Tower, CannonTower, ExplosiveTower, FireTower, SlowTower, MultiTower, LaserTower
+from tower import Tower, CannonTower, ExplosiveTower, FireTower, SlowTower, MultiTower, LaserTower, CrescentTower
 from trap import Mine
 from creep import Creep, Worm, Behemoth, SwiftWalker
 from os import path, pardir
@@ -32,7 +32,7 @@ class Level(object):
         self.bullet_group = pg.sprite.Group()
         self.beam_group = pg.sprite.Group()
 
-        self.all_towers = [Tower, CannonTower, ExplosiveTower, FireTower, SlowTower, MultiTower, LaserTower]
+        self.all_towers = [Tower, CannonTower, ExplosiveTower, FireTower, SlowTower, MultiTower, LaserTower, CrescentTower]
 
         self.trap_list = [Mine]
         """
@@ -103,7 +103,7 @@ class Level(object):
         self.bullet_group.draw(screen)
 
         #for bullet in self.bullet_group:
-        #    bullet.draw_debug(screen)
+            #bullet.draw_debug(screen)
         self.beam_group.draw(screen)
 
         for creep in self.creep_group:
