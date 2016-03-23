@@ -13,7 +13,6 @@ class LevelButton(pg.sprite.Sprite):
         self.parent = parent
         self.level = level_object
 
-
     def get_clicked(self):
         self.parent.persist["current_level"] = self.level
         self.parent.done = True

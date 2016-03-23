@@ -23,10 +23,10 @@ class MenuState(GameState):
 
         self.background_image = pg.image.load(path.join(ui_dir, "background.png")).convert_alpha()
 
-        self.button_list = []
-        self.button_list.append(self.start_button)
-        self.button_list.append(self.tutorial_button)
-        self.button_list.append(self.exit_button)
+        self.button_list = [self.start_button, self.tutorial_button, self.exit_button]
+
+    def startup(self, persistent):
+        self.persist["save_game"] = {"Level01": 0, "Level02": 0, "Level03": 0, "Level04": 0, "Level05": 0}
 
     def get_event(self, event):
         if event.type == pg.QUIT:

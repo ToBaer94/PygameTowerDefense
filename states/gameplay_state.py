@@ -1,6 +1,7 @@
 import pygame as pg
 import Queue
 from os import path, pardir
+import json, pickle
 from base_state import GameState
 
 from buttons.tower_selection_button import TowerButton
@@ -71,13 +72,22 @@ class GamePlay(GameState):
 
     def startup(self, persistent):
         self.persist = persistent
-        level_name = self.persist["current_level"].level
+
+        self.level_name = self.persist["current_level"].name
+
+        level_dir = self.persist["current_level"].level
         waves = self.persist["current_level"].wave_list
         money = self.persist["current_level"].money
         towers = self.persist["current_level"].towers
         traps = self.persist["current_level"].traps
 
-        self.level = Level(level_name, waves, money)
+        self.level = Level(level_dir, waves, money)
+
+
+        self.button_1_list = []
+        self.button_2_list = []
+
+        self.active_button_list = self.button_1_list
 
         for index, tower in enumerate(towers):
             if index <= 6:
@@ -230,6 +240,17 @@ class GamePlay(GameState):
     def update(self, dt):
         if self.level.game_over:
             self.done = True
+
+        if self.level.beaten:
+            self.persist["save_game"][self.level_name] = 1
+            with open("save_game.txt", "w") as save_game:
+                json.dump(self.persist["save_game"], save_game)
+
+            #with open("save_game.txt", "r") as save_game:
+                #test = json.load(save_game)
+                #print test["Level01"]
+            self.done = True
+
         self.update_money()
         self.level.update(dt)
 

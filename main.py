@@ -40,6 +40,7 @@ class Game(object):
         self.state.done = False
         self.state_name = next_state
         persistent = self.state.persist
+        print persistent
         self.state = self.states[self.state_name]
         self.state.startup(persistent)
 

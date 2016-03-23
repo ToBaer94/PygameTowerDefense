@@ -1,0 +1,1 @@
+{"Level05": 0, "Level04": 0, "Level01": 1, "Level03": 0, "Level02": 1}

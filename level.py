@@ -9,7 +9,6 @@ import random
 
 Vector = pg.math.Vector2
 
-level_dir = path.join(path.dirname(__file__), "assets", "levels")
 
 CREEP = 0
 WORM = 1
@@ -17,11 +16,10 @@ BEHEMOTH = 2
 SWIFTWALKER = 3
 
 
-
-
 class Level(object):
-    def __init__(self, level_name, waves, money):
-        self.tmx_file = path.join(level_name)
+    def __init__(self, level_dir, waves, money):
+
+        self.tmx_file = path.join(level_dir)
         self.tile_renderer = tilerenderer.Renderer(self.tmx_file)
         self.map_surface = self.tile_renderer.make_map()
         self.map_rect = self.map_surface.get_rect()
@@ -59,6 +57,8 @@ class Level(object):
 
         self.game_over = False
 
+        self.beaten = False
+
     def update(self, dt):
         # print self.current_spawn, self.current_wave
         can_spawn = False
@@ -93,7 +93,7 @@ class Level(object):
                 self.current_wave = self.waves[self.wave_number]
                 self.current_spawn = 0
             else:
-                print "games over"
+                self.beaten = True
 
     def draw(self, screen):
         screen.blit(self.map_surface, (0, 0))
