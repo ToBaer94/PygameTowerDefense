@@ -59,6 +59,8 @@ class Creep(pg.sprite.Sprite):
         if self.health <= 0:
             self.dead = True
             self.level.money += self.gold
+            self.level.earned_money += self.gold
+            self.level.killed_creeps += 1
             self.kill()
 
         if self.rect.collidepoint(self.end):

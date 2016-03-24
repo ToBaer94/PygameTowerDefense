@@ -53,6 +53,8 @@ class Level(object):
         self.last_spawn = pg.time.get_ticks()
 
         self.money = money
+        self.earned_money = 0
+        self.killed_creeps = 0
         self.creep_path = []
 
         self.game_over = False

@@ -22,7 +22,7 @@ trap_dir = path.join(path.dirname(__file__), pardir, "assets", "traps")
 class GamePlay(GameState):
     def __init__(self):
         super(GamePlay, self).__init__()
-        self.next_state = "LEVEL"
+        self.next_state = "SCORE"
 
         self.ui = pg.image.load(path.join(ui_dir, "ui_full_template.png")).convert_alpha()
         self.upgrade_ui = pg.image.load(path.join(ui_dir, "ui_upgrade.png")).convert_alpha()
@@ -68,10 +68,18 @@ class GamePlay(GameState):
         self.money_ui = None
         self.level = None
 
+        self.persist["earned_money"] = 0
+        self.persist["killed_creeps"] = 0
+
         self.props = {}
 
     def startup(self, persistent):
         self.persist = persistent
+
+        self.persist["earned_money"] = 0
+        self.persist["killed_creeps"] = 0
+
+        self.persist["result"] = "Error, this shouldnt show"
 
         self.level_name = self.persist["current_level"].name
 
@@ -188,6 +196,7 @@ class GamePlay(GameState):
 
         elif event.type == pg.KEYDOWN:
             if event.key == pg.K_ESCAPE:
+                self.persist["result"] = "Defeat!"
                 self.done = True
 
         if event.type == pg.MOUSEMOTION:
@@ -239,6 +248,7 @@ class GamePlay(GameState):
 
     def update(self, dt):
         if self.level.game_over:
+            self.persist["result"] = "Defeat!"
             self.done = True
 
         if self.level.beaten:
@@ -249,10 +259,14 @@ class GamePlay(GameState):
             #with open("save_game.txt", "r") as save_game:
                 #test = json.load(save_game)
                 #print test["Level01"]
+            self.persist["result"] = "Victory!"
             self.done = True
 
         self.update_money()
         self.level.update(dt)
+        self.persist["earned_money"] = self.level.earned_money
+        self.persist["killed_creeps"] = self.level.killed_creeps
+
 
     def update_money(self):
         self.money_ui = self.create_text(str(self.level.money) + " Gold")

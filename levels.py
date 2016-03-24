@@ -8,13 +8,13 @@ class Level01(object):
 
     level = level_dir + "\map.tmx"
 
-    wave_1 = [[0]]
+    wave_1 = [[0, 0, 0, 0]]
     wave_2 = [[0, 0, 1, 1, 1, 1]]
     wave_3 = [[1, 1, 1, 1, 1, 1]]
 
     wave_list = [wave_1]
 
-    towers = [0, 1, 2, 3, 4, 5, 6, 7]
+    towers = [0, 1, 2]
     traps = [0]
 
     money = 1000
@@ -41,10 +41,10 @@ class Level03(object):
 
     level = level_dir + "\map3.tmx"
 
-    wave_1 = [[0], [1], [2]]
-    wave_2 = [[2, 2, 1], [0, 0], [0, 0, 0]]
+    wave_1 = [[0, 0, 0, 0], [1, 1, 1, 0, 0], [1, 1, 1, 1, 2]]
+    wave_2 = [[3, 3, 0, 0], [2, 3, 1, 0, 0], [1, 3, 3, 1, 2]]
 
-    wave_list = [wave_1]
+    wave_list = [wave_1, wave_2]
 
     towers = [0, 1, 2, 3, 4, 5, 6, 7]
     traps = [0]
